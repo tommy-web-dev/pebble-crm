@@ -256,9 +256,16 @@ export const getSubscriptionStatus = async (userId: string): Promise<UserSubscri
 
                         console.log(`Created subscription data object:`, subscriptionData);
 
+                        // Filter out undefined values for Firebase compatibility
+                        const cleanSubscriptionData = Object.fromEntries(
+                            Object.entries(subscriptionData).filter(([_, value]) => value !== undefined)
+                        );
+
+                        console.log(`Cleaned subscription data for Firebase:`, cleanSubscriptionData);
+
                         // Update Firebase with the subscription data
                         await updateDoc(doc(db, 'users', userId), {
-                            subscription: subscriptionData,
+                            subscription: cleanSubscriptionData,
                             updatedAt: new Date()
                         });
 
