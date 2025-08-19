@@ -4,6 +4,13 @@
         {
             "src": "api/webhook.js",
             "use": "@vercel/node"
+        },
+        {
+            "src": "package.json",
+            "use": "@vercel/static-build",
+            "config": {
+                "distDir": "build"
+            }
         }
     ],
     "functions": {
@@ -11,10 +18,10 @@
             "maxDuration": 30
         }
     },
-    "routes": [
+    "rewrites": [
         {
-            "src": "/api/webhook",
-            "dest": "/api/webhook.js"
+            "source": "/api/webhook",
+            "destination": "/api/webhook.js"
         }
     ],
     "env": {
