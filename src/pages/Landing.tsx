@@ -247,7 +247,7 @@ const Landing: React.FC = () => {
                                     </Link>
                                     <button
                                         onClick={handleStartFreeTrial}
-                                        className="px-4 py-2 bg-gradient-to-r from-slate-600 to-blue-600 text-sm font-semibold rounded-lg hover:from-slate-700 hover:to-blue-700 focus:ring-4 focus:ring-blue-500/20 focus:ring-offset-2 transition-all duration-200"
+                                        className="px-4 py-2 bg-gradient-to-r from-slate-600 to-blue-600 text-white text-sm font-semibold rounded-lg hover:from-slate-700 hover:to-blue-700 focus:ring-4 focus:ring-blue-500/20 focus:ring-offset-2 transition-all duration-200"
                                     >
                                         {currentUser && subscription && ['active', 'trialing'].includes(subscription.status)
                                             ? 'Open CRM'

@@ -52,6 +52,50 @@ const SubscriptionStatus: React.FC = () => {
         );
     }
 
+    // Debug: Log the subscription data to see what we're working with
+    console.log('Subscription data in SubscriptionStatus:', subscription);
+    console.log('Current period dates:', {
+        start: subscription.currentPeriodStart,
+        end: subscription.currentPeriodEnd,
+        startType: typeof subscription.currentPeriodStart,
+        endType: typeof subscription.currentPeriodEnd
+    });
+
+    // Helper function to safely convert dates (handles Firestore Timestamps and Date objects)
+    const safeConvertDate = (dateValue: any): Date | undefined => {
+        if (!dateValue) return undefined;
+
+        // If it's already a Date object
+        if (dateValue instanceof Date) {
+            return dateValue;
+        }
+
+        // If it's a Firestore Timestamp
+        if (dateValue && typeof dateValue === 'object' && dateValue.toDate) {
+            return dateValue.toDate();
+        }
+
+        // If it's a number (Unix timestamp)
+        if (typeof dateValue === 'number') {
+            const date = new Date(dateValue);
+            return isNaN(date.getTime()) ? undefined : date;
+        }
+
+        // If it's a string, try to parse it
+        if (typeof dateValue === 'string') {
+            const date = new Date(dateValue);
+            return isNaN(date.getTime()) ? undefined : date;
+        }
+
+        return undefined;
+    };
+
+    // Convert dates safely
+    const currentPeriodStart = safeConvertDate(subscription.currentPeriodStart);
+    const currentPeriodEnd = safeConvertDate(subscription.currentPeriodEnd);
+    const trialStart = safeConvertDate(subscription.trialStart);
+    const trialEnd = safeConvertDate(subscription.trialEnd);
+
     const getStatusColor = (status: string) => {
         switch (status) {
             case 'active':
@@ -88,7 +132,10 @@ const SubscriptionStatus: React.FC = () => {
         }
     };
 
-    const formatDate = (date: Date) => {
+    const formatDate = (date: Date | undefined) => {
+        if (!date || isNaN(date.getTime()) || date.getFullYear() < 2020) {
+            return 'Not available';
+        }
         return new Intl.DateTimeFormat('en-GB', {
             day: 'numeric',
             month: 'long',
@@ -96,8 +143,8 @@ const SubscriptionStatus: React.FC = () => {
         }).format(date);
     };
 
-    const isTrialActive = subscription.status === 'trialing' && subscription.trialEnd && new Date() < subscription.trialEnd;
-    const daysLeftInTrial = subscription.trialEnd ? Math.ceil((subscription.trialEnd.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : 0;
+    const isTrialActive = subscription.status === 'trialing' && trialEnd && new Date() < trialEnd;
+    const daysLeftInTrial = trialEnd ? Math.ceil((trialEnd.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : 0;
 
     return (
         <div className="bg-white rounded-lg shadow p-6">
@@ -137,23 +184,23 @@ const SubscriptionStatus: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <p className="text-sm font-medium text-gray-500">Current Period Start</p>
-                        <p className="text-gray-900">{formatDate(subscription.currentPeriodStart)}</p>
+                        <p className="text-gray-900">{formatDate(currentPeriodStart)}</p>
                     </div>
                     <div>
                         <p className="text-sm font-medium text-gray-500">Current Period End</p>
-                        <p className="text-gray-900">{formatDate(subscription.currentPeriodEnd)}</p>
+                        <p className="text-gray-900">{formatDate(currentPeriodEnd)}</p>
                     </div>
                 </div>
 
-                {subscription.trialStart && subscription.trialEnd && (
+                {trialStart && trialEnd && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <p className="text-sm font-medium text-gray-500">Trial Start</p>
-                            <p className="text-gray-900">{formatDate(subscription.trialStart)}</p>
+                            <p className="text-gray-900">{formatDate(trialStart)}</p>
                         </div>
                         <div>
                             <p className="text-sm font-medium text-gray-500">Trial End</p>
-                            <p className="text-gray-900">{formatDate(subscription.trialEnd)}</p>
+                            <p className="text-gray-900">{formatDate(trialEnd)}</p>
                         </div>
                     </div>
                 )}
@@ -171,7 +218,7 @@ const SubscriptionStatus: React.FC = () => {
                                     Subscription Ending
                                 </p>
                                 <p className="text-sm text-yellow-700">
-                                    Your subscription will end on {formatDate(subscription.currentPeriodEnd)}
+                                    Your subscription will end on {formatDate(currentPeriodEnd)}
                                 </p>
                             </div>
                         </div>
@@ -181,7 +228,7 @@ const SubscriptionStatus: React.FC = () => {
 
             <div className="mt-6 pt-4 border-t border-gray-200">
                 <a
-                    href="https://billing.stripe.com/p/login/test_28o01K8vF8mB8cEMM"
+                    href="https://billing.stripe.com/p/login/live_aHh01K8vF8mB8cEMM"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"

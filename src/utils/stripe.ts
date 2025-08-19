@@ -232,7 +232,12 @@ export const getSubscriptionStatus = async (userId: string): Promise<UserSubscri
                             if (!timestamp || typeof timestamp !== 'number') return undefined;
                             try {
                                 const date = new Date(timestamp * 1000);
-                                return isNaN(date.getTime()) ? undefined : date;
+                                // Check if the date is valid and not in the distant past
+                                if (isNaN(date.getTime()) || date.getFullYear() < 2020) {
+                                    console.warn('Invalid or too old timestamp:', timestamp, 'parsed as:', date);
+                                    return undefined;
+                                }
+                                return date;
                             } catch (error) {
                                 console.warn('Invalid timestamp:', timestamp, error);
                                 return undefined;

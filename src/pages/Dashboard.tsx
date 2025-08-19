@@ -200,62 +200,6 @@ const Dashboard: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Subscription Status Banner */}
-                {subscription && (
-                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-3">
-                                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                                <div>
-                                    <p className="text-green-800 font-medium">
-                                        {subscription.status === 'trialing' ? 'Free Trial Active' : 'Subscription Active'}
-                                    </p>
-                                    <p className="text-green-600 text-sm">
-                                        {subscription.status === 'trialing'
-                                            ? `Trial ends ${subscription.trialEnd ? new Date(subscription.trialEnd).toLocaleDateString() : 'soon'}`
-                                            : `Plan: ${subscription.planName}`
-                                        }
-                                    </p>
-                                </div>
-                            </div>
-                            {subscription.status === 'trialing' && (
-                                <button
-                                    onClick={() => navigate('/upgrade')}
-                                    className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors duration-200"
-                                >
-                                    Upgrade Now
-                                </button>
-                            )}
-                        </div>
-                    </div>
-                )}
-
-                {/* No Subscription Banner - for users who need to complete setup */}
-                {!subscription && currentUser && (
-                    <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-4">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-3">
-                                <div className="w-3 h-3 bg-amber-500 rounded-full"></div>
-                                <div>
-                                    <p className="text-amber-800 font-medium">Subscription Setup Required</p>
-                                    <p className="text-amber-600 text-sm">
-                                        {currentUser.email === 'tom.williams5@gmail.com'
-                                            ? 'Your Stripe subscription exists but needs to be linked to your account. Please contact support.'
-                                            : 'Welcome to Pebble CRM! Complete your subscription to access all features.'
-                                        }
-                                    </p>
-                                </div>
-                            </div>
-                            <button
-                                onClick={() => navigate('/upgrade')}
-                                className="px-4 py-2 bg-amber-600 text-white text-sm font-medium rounded-lg hover:bg-amber-700 transition-colors duration-200"
-                            >
-                                {currentUser.email === 'tom.williams5@gmail.com' ? 'Contact Support' : 'Complete Setup'}
-                            </button>
-                        </div>
-                    </div>
-                )}
-
                 {/* Key Metrics Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <div className="group bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-6 hover:shadow-xl transition-all duration-300 transform hover:scale-105">

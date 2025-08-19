@@ -2,11 +2,30 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useAppStore } from '../contexts/AppContext';
+import { getSubscriptionStatus } from '../utils/stripe';
+import { UserSubscription } from '../types';
 
 const Sidebar: React.FC = () => {
     const { currentUser, logout } = useAuth();
     const { sidebarOpen, setSidebarOpen } = useAppStore();
     const location = useLocation();
+    const [subscription, setSubscription] = React.useState<UserSubscription | null>(null);
+
+    // Load subscription status
+    React.useEffect(() => {
+        const loadSubscription = async () => {
+            if (currentUser) {
+                try {
+                    const sub = await getSubscriptionStatus(currentUser.uid);
+                    setSubscription(sub);
+                } catch (error) {
+                    console.error('Error loading subscription:', error);
+                    setSubscription(null);
+                }
+            }
+        };
+        loadSubscription();
+    }, [currentUser]);
 
     const navigation = [
         {
@@ -88,9 +107,16 @@ const Sidebar: React.FC = () => {
                         <div className="w-8 h-8 bg-gradient-to-br from-slate-700 to-blue-600 rounded-lg flex items-center justify-center shadow-lg">
                             <span className="text-white font-bold text-lg">P</span>
                         </div>
-                        <span className="text-xl font-bold bg-gradient-to-r from-slate-700 to-blue-600 bg-clip-text text-transparent">
-                            Pebble
-                        </span>
+                        <div className="flex items-center space-x-2">
+                            <span className="text-xl font-bold bg-gradient-to-r from-slate-700 to-blue-600 bg-clip-text text-transparent">
+                                Pebble
+                            </span>
+                            {subscription && (
+                                <span className="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full border border-green-200">
+                                    Active
+                                </span>
+                            )}
+                        </div>
                     </div>
 
                     {/* Mobile close button */}
