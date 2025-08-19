@@ -1,79 +1,31 @@
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-const admin = require('firebase-admin');
+// Simple test function - no external dependencies
+// const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+// const admin = require('firebase-admin');
 
 // Initialize Firebase Admin if not already initialized
-if (!admin.apps.length) {
-    admin.initializeApp({
-        credential: admin.credential.cert({
-            projectId: process.env.FIREBASE_PROJECT_ID,
-            clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-            privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
-        }),
-        databaseURL: process.env.FIREBASE_DATABASE_URL,
-    });
-}
+// if (!admin.apps.length) {
+//     admin.initializeApp({
+//         credential: admin.credential.cert({
+//             projectId: process.env.FIREBASE_PROJECT_ID,
+//             clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+//             privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+//         }),
+//         databaseURL: process.env.FIREBASE_DATABASE_URL,
+//     });
+// }
 
-const db = admin.firestore();
+// const db = admin.firestore();
 
 module.exports = async function handler(req, res) {
-    if (req.method !== 'POST') {
-        return res.status(405).json({ error: 'Method not allowed' });
-    }
+    // Simple test function - always return success
+    console.log('Webhook function called successfully!');
 
-    // Check if this is a test request (no Stripe signature)
-    const sig = req.headers['stripe-signature'];
-
-    if (!sig) {
-        // This is a test request, return success
-        console.log('Test request received');
-        return res.status(200).json({
-            message: 'Webhook endpoint is working!',
-            timestamp: new Date().toISOString(),
-            test: true
-        });
-    }
-
-    const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
-
-    let event;
-
-    try {
-        // Verify webhook signature
-        event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
-    } catch (err) {
-        console.error('Webhook signature verification failed:', err.message);
-        return res.status(400).json({ error: 'Webhook signature verification failed' });
-    }
-
-    console.log('Received webhook event:', event.type);
-
-    try {
-        switch (event.type) {
-            case 'customer.subscription.created':
-            case 'customer.subscription.updated':
-                await handleSubscriptionChange(event.data.object);
-                break;
-            case 'customer.subscription.deleted':
-                await handleSubscriptionCancellation(event.data.object);
-                break;
-            case 'invoice.payment_succeeded':
-                await handlePaymentSuccess(event.data.object);
-                break;
-            case 'invoice.payment_failed':
-                await handlePaymentFailure(event.data.object);
-                break;
-            case 'customer.updated':
-                await handleCustomerUpdate(event.data.object);
-                break;
-            default:
-                console.log(`Unhandled event type: ${event.type}`);
-        }
-
-        res.status(200).json({ received: true });
-    } catch (error) {
-        console.error('Error processing webhook:', error);
-        res.status(500).json({ error: 'Webhook processing failed' });
-    }
+    return res.status(200).json({
+        message: 'Webhook endpoint is working!',
+        timestamp: new Date().toISOString(),
+        test: true,
+        status: 'success'
+    });
 }
 
 async function handleSubscriptionChange(subscription) {
