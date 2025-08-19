@@ -1,20 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
-type AuthMode = 'login' | 'signup' | 'reset' | 'verify';
+type AuthMode = 'login' | 'reset' | 'verify';
 
 const Login: React.FC = () => {
     const [mode, setMode] = useState<AuthMode>('login');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
-    const [displayName, setDisplayName] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
 
-    const { login, signup, resetPassword, sendVerificationEmail, currentUser } = useAuth();
+    const { login, resetPassword, sendVerificationEmail, currentUser } = useAuth();
     const navigate = useNavigate();
 
     // Redirect authenticated users to dashboard
@@ -31,17 +29,7 @@ const Login: React.FC = () => {
         setLoading(true);
 
         try {
-            if (mode === 'signup') {
-                if (password !== confirmPassword) {
-                    throw new Error('Passwords do not match');
-                }
-                if (password.length < 6) {
-                    throw new Error('Password must be at least 6 characters');
-                }
-                await signup(email, password, displayName);
-                setSuccess('Account created! Please check your email for verification.');
-                setMode('verify');
-            } else if (mode === 'login') {
+            if (mode === 'login') {
                 await login(email, password);
                 // Navigate to dashboard after successful login
                 navigate('/dashboard');
@@ -68,79 +56,6 @@ const Login: React.FC = () => {
 
     const renderForm = () => {
         switch (mode) {
-            case 'signup':
-                return (
-                    <>
-                        <div>
-                            <label htmlFor="displayName" className="block text-sm font-medium text-gray-700">
-                                Full Name
-                            </label>
-                            <input
-                                id="displayName"
-                                name="displayName"
-                                type="text"
-                                autoComplete="name"
-                                required
-                                value={displayName}
-                                onChange={(e) => setDisplayName(e.target.value)}
-                                className="input mt-1"
-                                placeholder="Enter your full name"
-                            />
-                        </div>
-
-                        <div>
-                            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                                Email address
-                            </label>
-                            <input
-                                id="email"
-                                name="email"
-                                type="email"
-                                autoComplete="email"
-                                required
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                className="input mt-1"
-                                placeholder="Enter your email"
-                            />
-                        </div>
-
-                        <div>
-                            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                                Password
-                            </label>
-                            <input
-                                id="password"
-                                name="password"
-                                type="password"
-                                autoComplete="new-password"
-                                required
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                className="input mt-1"
-                                placeholder="Create a password"
-                            />
-                        </div>
-
-                        <div>
-                            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
-                                Confirm Password
-                            </label>
-                            <input
-                                id="confirmPassword"
-                                name="confirmPassword"
-                                type="password"
-                                autoComplete="new-password"
-                                required
-                                value={confirmPassword}
-                                onChange={(e) => setConfirmPassword(e.target.value)}
-                                className="input mt-1"
-                                placeholder="Confirm your password"
-                            />
-                        </div>
-                    </>
-                );
-
             case 'reset':
                 return (
                     <div>
@@ -238,15 +153,6 @@ const Login: React.FC = () => {
 
     const getModeInfo = () => {
         switch (mode) {
-            case 'signup':
-                return {
-                    title: 'Create your account',
-                    subtitle: 'Start managing your business relationships',
-                    buttonText: 'Create Account',
-                    switchText: 'Already have an account?',
-                    switchAction: 'Sign in',
-                    switchMode: 'login' as AuthMode
-                };
             case 'reset':
                 return {
                     title: 'Reset your password',
@@ -270,9 +176,9 @@ const Login: React.FC = () => {
                     title: 'Sign in to your account',
                     subtitle: 'Welcome back to Pebble.io',
                     buttonText: 'Sign In',
-                    switchText: "Don't have an account?",
-                    switchAction: 'Sign up',
-                    switchMode: 'signup' as AuthMode
+                    switchText: '',
+                    switchAction: '',
+                    switchMode: 'login' as AuthMode
                 };
         }
     };
@@ -349,25 +255,14 @@ const Login: React.FC = () => {
                         </div>
                     )}
 
-                    {modeInfo.switchText && (
-                        <div className="text-center">
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setMode(modeInfo.switchMode);
-                                    setError('');
-                                    setSuccess('');
-                                    setEmail('');
-                                    setPassword('');
-                                    setConfirmPassword('');
-                                    setDisplayName('');
-                                }}
-                                className="text-primary-600 hover:text-primary-500 text-sm"
-                            >
-                                {modeInfo.switchText} {modeInfo.switchAction}
-                            </button>
-                        </div>
-                    )}
+                    <div className="text-center">
+                        <p className="text-sm text-gray-600">
+                            Don't have an account?{' '}
+                            <Link to="/signup" className="text-primary-600 hover:text-primary-500 font-medium">
+                                Sign up here
+                            </Link>
+                        </p>
+                    </div>
                 </form>
             </div>
         </div>
