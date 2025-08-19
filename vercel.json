@@ -33,6 +33,10 @@
         {
             "source": "/api/get-subscription",
             "destination": "/api/get-subscription.js"
+        },
+        {
+            "source": "/(.*)",
+            "destination": "/index.html"
         }
     ]
 }
