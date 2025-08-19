@@ -31,6 +31,7 @@ const Dashboard: React.FC = () => {
                     setSubscription(sub);
                 } catch (error) {
                     console.error('Error loading subscription:', error);
+                    setSubscription(null); // Ensure subscription is set to null on error
                 }
             }
         };
@@ -225,6 +226,29 @@ const Dashboard: React.FC = () => {
                                     Upgrade Now
                                 </button>
                             )}
+                        </div>
+                    </div>
+                )}
+
+                {/* No Subscription Banner - for users who need to complete setup */}
+                {!subscription && currentUser && (
+                    <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-4">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-3">
+                                <div className="w-3 h-3 bg-amber-500 rounded-full"></div>
+                                <div>
+                                    <p className="text-amber-800 font-medium">Complete Your Setup</p>
+                                    <p className="text-amber-600 text-sm">
+                                        Welcome to Pebble CRM! Complete your subscription to access all features.
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => navigate('/upgrade')}
+                                className="px-4 py-2 bg-amber-600 text-white text-sm font-medium rounded-lg hover:bg-amber-700 transition-colors duration-200"
+                            >
+                                Complete Setup
+                            </button>
                         </div>
                     </div>
                 )}

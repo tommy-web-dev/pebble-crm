@@ -21,6 +21,7 @@ const Landing: React.FC = () => {
                     setSubscription(sub);
                 } catch (error) {
                     console.error('Error checking subscription:', error);
+                    setSubscription(null); // Ensure subscription is set to null on error
                 } finally {
                     setCheckingSubscription(false);
                 }

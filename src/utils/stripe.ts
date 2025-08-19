@@ -159,16 +159,22 @@ export const getSubscriptionStatus = async (userId: string): Promise<UserSubscri
         const userDoc = await getDoc(doc(db, 'users', userId));
 
         if (!userDoc.exists()) {
-            throw new Error('User document not found');
+            console.warn(`User document not found for userId: ${userId}`);
+            return null;
         }
 
-        if (userDoc.data().subscription) {
-            return userDoc.data().subscription as UserSubscription;
+        const userData = userDoc.data();
+
+        if (userData.subscription) {
+            return userData.subscription as UserSubscription;
         }
 
+        // No subscription found - this is normal for new users
+        console.log(`No subscription found for user: ${userId}`);
         return null;
     } catch (error) {
         console.error('Error getting subscription status:', error);
-        throw error; // Re-throw to let caller handle it
+        // Don't throw error, just return null to prevent crashes
+        return null;
     }
 }; 
