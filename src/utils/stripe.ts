@@ -163,10 +163,15 @@ export const checkExistingSubscription = async (email: string): Promise<UserSubs
         const q = query(usersRef, where('email', '==', email));
         const querySnapshot = await getDocs(q);
 
+        console.log(`Checking for existing subscription with email: ${email}`);
+        console.log(`Found ${querySnapshot.docs.length} user documents with this email`);
+
         for (const doc of querySnapshot.docs) {
             const userData = doc.data();
+            console.log(`Checking user document:`, userData);
+
             if (userData.subscription && userData.subscription.status) {
-                console.log(`Found existing subscription for email: ${email}`);
+                console.log(`Found existing subscription for email: ${email}:`, userData.subscription);
                 return userData.subscription as UserSubscription;
             }
         }

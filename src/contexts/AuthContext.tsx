@@ -108,24 +108,40 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
             if (!userDoc.exists()) {
                 // Create new user document
-                await setDoc(userRef, {
+                const userData: any = {
                     uid: firebaseUser.uid,
                     email: firebaseUser.email || '',
-                    displayName: firebaseUser.displayName || undefined,
-                    photoURL: firebaseUser.photoURL || undefined,
                     createdAt: new Date(),
                     updatedAt: new Date(),
                     subscription: null
-                });
+                };
+
+                // Only add fields that have values
+                if (firebaseUser.displayName) {
+                    userData.displayName = firebaseUser.displayName;
+                }
+                if (firebaseUser.photoURL) {
+                    userData.photoURL = firebaseUser.photoURL;
+                }
+
+                await setDoc(userRef, userData);
                 console.log('Created new user document for:', firebaseUser.email);
             } else {
                 // Update existing user document with latest info
-                await setDoc(userRef, {
+                const updateData: any = {
                     email: firebaseUser.email || '',
-                    displayName: firebaseUser.displayName || undefined,
-                    photoURL: firebaseUser.photoURL || undefined,
                     updatedAt: new Date()
-                }, { merge: true });
+                };
+
+                // Only add fields that have values
+                if (firebaseUser.displayName) {
+                    updateData.displayName = firebaseUser.displayName;
+                }
+                if (firebaseUser.photoURL) {
+                    updateData.photoURL = firebaseUser.photoURL;
+                }
+
+                await setDoc(userRef, updateData, { merge: true });
                 console.log('Updated existing user document for:', firebaseUser.email);
             }
         } catch (error) {
@@ -139,11 +155,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
                 const user: User = {
                     uid: firebaseUser.uid,
                     email: firebaseUser.email || '',
-                    displayName: firebaseUser.displayName || undefined,
-                    photoURL: firebaseUser.photoURL || undefined,
                     emailVerified: firebaseUser.emailVerified,
                     createdAt: new Date(),
                 };
+
+                // Only add optional fields if they have values
+                if (firebaseUser.displayName) {
+                    user.displayName = firebaseUser.displayName;
+                }
+                if (firebaseUser.photoURL) {
+                    user.photoURL = firebaseUser.photoURL;
+                }
                 setCurrentUser(user);
 
                 // Ensure user document exists in Firestore
