@@ -200,9 +200,54 @@ export const getSubscriptionStatus = async (userId: string): Promise<UserSubscri
         const userData = userDoc.data();
         console.log(`Checking subscription for user ${userId}:`, userData);
 
-        if (userData.subscription) {
+        if (userData.subscription && userData.subscription.status) {
             console.log(`Found subscription in user document:`, userData.subscription);
             return userData.subscription as UserSubscription;
+        }
+
+        // NEW: If user has stripeCustomerId but no subscription data, fetch from Stripe
+        if (userData.stripeCustomerId && !userData.subscription) {
+            console.log(`User has stripeCustomerId ${userData.stripeCustomerId} but no subscription data. Fetching from Stripe...`);
+
+            try {
+                // Call your backend to get subscription data from Stripe
+                const response = await fetch(`https://pebble-crm.vercel.app/api/get-subscription?customerId=${userData.stripeCustomerId}`);
+
+                if (response.ok) {
+                    const stripeData = await response.json();
+                    console.log(`Retrieved subscription data from Stripe:`, stripeData);
+
+                    if (stripeData.subscription) {
+                        // Create subscription object
+                        const subscriptionData: UserSubscription = {
+                            stripeCustomerId: userData.stripeCustomerId,
+                            stripeSubscriptionId: stripeData.subscription.id,
+                            status: stripeData.subscription.status,
+                            planName: 'Pebble CRM - Professional Plan',
+                            currentPeriodStart: new Date(stripeData.subscription.current_period_start * 1000),
+                            currentPeriodEnd: new Date(stripeData.subscription.current_period_end * 1000),
+                            trialStart: stripeData.subscription.trial_start ? new Date(stripeData.subscription.trial_start * 1000) : undefined,
+                            trialEnd: stripeData.subscription.trial_end ? new Date(stripeData.subscription.trial_end * 1000) : undefined,
+                            cancelAtPeriodEnd: stripeData.subscription.cancel_at_period_end,
+                            createdAt: new Date(),
+                            updatedAt: new Date()
+                        };
+
+                        // Update Firebase with the subscription data
+                        await updateDoc(doc(db, 'users', userId), {
+                            subscription: subscriptionData,
+                            updatedAt: new Date()
+                        });
+
+                        console.log(`✅ Updated Firebase with subscription data from Stripe`);
+                        return subscriptionData;
+                    }
+                } else {
+                    console.log(`Failed to fetch subscription from Stripe: ${response.status}`);
+                }
+            } catch (error) {
+                console.error('Error fetching subscription from Stripe:', error);
+            }
         }
 
         // No subscription found in current user document

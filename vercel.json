@@ -10,6 +10,10 @@
             "use": "@vercel/node"
         },
         {
+            "src": "api/get-subscription.js",
+            "use": "@vercel/node"
+        },
+        {
             "src": "package.json",
             "use": "@vercel/static-build",
             "config": {
@@ -25,6 +29,10 @@
         {
             "source": "/api/create-checkout-session",
             "destination": "/api/create-checkout-session.js"
+        },
+        {
+            "source": "/api/get-subscription",
+            "destination": "/api/get-subscription.js"
         }
     ]
 }
