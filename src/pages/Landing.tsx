@@ -124,10 +124,6 @@ const Landing: React.FC = () => {
 
     const faqs = [
         {
-            question: "Why don't you offer a free trial or free model?",
-            answer: "This is something we may consider in the future, but for now we will only offer the paid model."
-        },
-        {
             question: "Can I import my existing contacts?",
             answer: "No, this is not possible in the current version, but is one of our priority features to implement as we continue to develop Pebble."
         },
@@ -141,7 +137,7 @@ const Landing: React.FC = () => {
         },
         {
             question: "What kind of support do you provide?",
-            answer: "We offer email support for all users via our Support email that can be found within the CRM 'Settings' tab."
+            answer: "We offer email support for all users via our Support email - support@pebblecrm.app. We aim to respond within 48 hours."
         }
     ];
 
