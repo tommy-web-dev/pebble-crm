@@ -176,7 +176,11 @@ export const checkExistingSubscription = async (email: string): Promise<UserSubs
             }
         }
 
-        console.log(`No existing subscription found for email: ${email}`);
+        // No subscription found in Firestore, but user might have one in Stripe
+        // This is a fallback for when webhooks haven't properly synced the data
+        console.log(`No existing subscription found in Firestore for email: ${email}`);
+        console.log(`Note: User might have subscription in Stripe that hasn't been synced to Firestore`);
+
         return null;
     } catch (error) {
         console.error('Error checking existing subscription:', error);
@@ -222,6 +226,15 @@ export const getSubscriptionStatus = async (userId: string): Promise<UserSubscri
 
         // No subscription found - this is normal for new users
         console.log(`No subscription found for user: ${userId}`);
+
+        // TODO: This is where you would call your backend to check Stripe directly
+        // For now, we'll return null and show a helpful message
+        console.log(`To fix this issue:`);
+        console.log(`1. Check if your Stripe webhook endpoint is working`);
+        console.log(`2. Verify webhook events are being sent to: ${process.env.REACT_APP_WEBHOOK_URL || 'your-webhook-url'}`);
+        console.log(`3. Check Stripe dashboard for subscription status`);
+        console.log(`4. Manually sync subscription data if needed`);
+
         return null;
     } catch (error) {
         console.error('Error getting subscription status:', error);
