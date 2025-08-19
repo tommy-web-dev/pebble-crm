@@ -6,7 +6,7 @@
             "use": "@vercel/node"
         },
         {
-            "src": "api/test.js",
+            "src": "api/create-checkout-session.js",
             "use": "@vercel/node"
         },
         {
@@ -23,8 +23,8 @@
             "destination": "/api/webhook.js"
         },
         {
-            "source": "/api/test",
-            "destination": "/api/test.js"
+            "source": "/api/create-checkout-session",
+            "destination": "/api/create-checkout-session.js"
         }
     ]
 }

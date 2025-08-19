@@ -5,29 +5,48 @@ export interface CheckoutOptions {
     interval: 'monthly' | 'yearly';
     successUrl?: string;
     cancelUrl?: string;
+    userId?: string;
+    userEmail?: string;
 }
 
 export const createStripeCheckout = async (options: CheckoutOptions): Promise<string | null> => {
     try {
-        // This calls your Express server to create a Stripe checkout session
-        const response = await fetch('https://pebble-stripe-59wsz2kjx-pebble-crm.vercel.app/api/create-checkout-session', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                interval: options.interval,
-                successUrl: options.successUrl || `${window.location.origin}/dashboard`,
-                cancelUrl: options.cancelUrl || `${window.location.origin}/`,
-            }),
+        // Get current user from Firebase Auth
+        const { getAuth, onAuthStateChanged } = await import('firebase/auth');
+        const auth = getAuth();
+
+        return new Promise((resolve, reject) => {
+            const unsubscribe = onAuthStateChanged(auth, async (user) => {
+                unsubscribe();
+
+                if (!user) {
+                    reject(new Error('User not authenticated'));
+                    return;
+                }
+
+                // This calls your Express server to create a Stripe checkout session
+                const response = await fetch('https://pebble-crm.vercel.app/api/create-checkout-session', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        interval: options.interval,
+                        successUrl: options.successUrl || `${window.location.origin}/dashboard`,
+                        cancelUrl: options.cancelUrl || `${window.location.origin}/`,
+                        userId: user.uid,
+                        userEmail: user.email
+                    }),
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to create checkout session');
+                }
+
+                const data = await response.json();
+                resolve(data.url); // Stripe checkout URL
+            });
         });
-
-        if (!response.ok) {
-            throw new Error('Failed to create checkout session');
-        }
-
-        const data = await response.json();
-        return data.url; // Stripe checkout URL
     } catch (error) {
         console.error('Error creating checkout session:', error);
         return null;
