@@ -5,9 +5,9 @@ A lightweight, modern CRM for solo professionals and freelancers with Stripe sub
 ## 🚀 Quick Setup
 
 ### 1. Install Dependencies
-```bash
-npm install
-```
+   ```bash
+   npm install
+   ```
 
 ### 2. Set Environment Variables in Vercel
 
@@ -24,7 +24,7 @@ You need to set these environment variables in your Vercel project:
 - `FIREBASE_DATABASE_URL` - Your Firebase database URL
 
 ### 3. Deploy to Vercel
-```bash
+   ```bash
 vercel --prod
 ```
 
