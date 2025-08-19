@@ -1,170 +1,77 @@
-# Pebble - Modern CRM for Professionals
+# Pebble Stripe API
 
-A lightweight, modern web-based CRM designed specifically for solo professionals and freelancers. Pebble focuses on simplicity, usability, and responsive design to help you manage your business relationships effectively.
+Stripe webhook API for Pebble CRM that handles subscription events and syncs data to Firestore.
 
-## ✨ Features
+## 🚀 Quick Setup
 
-- **Contacts Management**: Add, edit, and organize contacts with tags and notes
-- **Pipeline Tracking**: Kanban board for managing deals and opportunities
-- **Task Management**: Organize tasks with reminders and priority levels
-- **Dashboard**: Key metrics and upcoming activities at a glance
-- **Modern UI**: Clean, responsive design that works on all devices
-- **Real-time Updates**: Firebase-powered real-time data synchronization
-
-## 🛠️ Getting Started
-
-### Prerequisites
-- Node.js (v16 or higher)
-- npm or yarn
-- Firebase project
-
-### Installation
-
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd pebble-io
-   ```
-
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
-
-3. **Set up Firebase**
-   - Create a new Firebase project at [Firebase Console](https://console.firebase.google.com/)
-   - Enable Authentication (Email/Password)
-   - Enable Firestore Database
-   - Get your Firebase configuration
-
-4. **Configure environment variables**
-   ```bash
-   cp env.example .env.local
-   ```
-   
-   Edit `.env.local` with your Firebase configuration:
-   ```env
-   REACT_APP_FIREBASE_API_KEY=your_api_key_here
-   REACT_APP_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
-   REACT_APP_FIREBASE_PROJECT_ID=your_project_id
-   REACT_APP_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
-   REACT_APP_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
-   REACT_APP_FIREBASE_APP_ID=your_app_id
-   ```
-
-5. **Start the development server**
-   ```bash
-   npm start
-   ```
-
-6. **Open your browser**
-   Navigate to [http://localhost:3000](http://localhost:3000)
-
-## 📁 Project Structure
-
-```
-src/
-├── components/          # Reusable UI components
-│   ├── Header.tsx      # Top navigation header
-│   ├── Layout.tsx      # Main layout wrapper
-│   ├── PrivateRoute.tsx # Authentication guard
-│   └── Sidebar.tsx     # Navigation sidebar
-├── contexts/           # React Context providers
-│   ├── AuthContext.tsx # Authentication state
-│   └── AppContext.tsx  # Application state (Zustand)
-├── pages/              # Page components
-│   ├── Dashboard.tsx   # Main dashboard
-│   ├── Contacts.tsx    # Contacts management
-│   ├── Pipeline.tsx    # Sales pipeline
-│   ├── Tasks.tsx       # Task management
-│   └── Login.tsx       # Authentication
-├── types/              # TypeScript type definitions
-│   └── index.ts        # Main type interfaces
-├── config/             # Configuration files
-│   └── firebase.ts     # Firebase initialization
-├── App.tsx             # Main app component
-└── index.tsx           # Entry point
+### 1. Install Dependencies
+```bash
+npm install
 ```
 
-## 🔧 Available Scripts
+### 2. Set Environment Variables in Vercel
 
-- `npm start` - Start development server
-- `npm build` - Build for production
-- `npm test` - Run tests
-- `npm eject` - Eject from Create React App
+You need to set these environment variables in your Vercel project:
 
-## 🎨 Design System
+#### Stripe Configuration
+- `STRIPE_SECRET_KEY` - Your Stripe secret key (starts with `sk_`)
+- `STRIPE_WEBHOOK_SECRET` - Your webhook secret (starts with `whsec_`)
 
-### Colors
-- **Primary**: Blue (#0ea5e9) - Main brand color
-- **Gray Scale**: Full range from 50-900 for UI elements
-- **Semantic Colors**: Red, yellow, green for status indicators
+#### Firebase Configuration
+- `FIREBASE_PROJECT_ID` - Your Firebase project ID
+- `FIREBASE_CLIENT_EMAIL` - Your Firebase service account email
+- `FIREBASE_PRIVATE_KEY` - Your Firebase private key
+- `FIREBASE_DATABASE_URL` - Your Firebase database URL
 
-### Components
-- **Buttons**: Primary and secondary variants with hover states
-- **Cards**: Clean white cards with subtle shadows
-- **Inputs**: Consistent form inputs with focus states
-- **Typography**: Inter font family for clean readability
+### 3. Deploy to Vercel
+```bash
+vercel --prod
+```
 
-## 📱 Responsive Design
+## 📋 Environment Variables Setup
 
-- **Mobile-first** approach
-- **Breakpoints**: TailwindCSS responsive utilities
-- **Sidebar**: Collapsible on mobile, fixed on desktop
-- **Tables**: Horizontal scroll on small screens
+### In Vercel Dashboard:
+1. Go to your project settings
+2. Navigate to "Environment Variables"
+3. Add each variable from the list above
 
-## 🔐 Authentication
+### Firebase Service Account:
+1. Go to Firebase Console → Project Settings → Service Accounts
+2. Click "Generate new private key"
+3. Download the JSON file
+4. Use the values from the JSON file for Firebase environment variables
 
-- **Email/Password** authentication via Firebase
-- **Protected Routes** for authenticated users
-- **User Context** for managing authentication state
-- **Automatic Redirects** based on auth status
+## 🔗 Webhook Endpoint
 
-## 🗄️ Data Models
+After deployment, your webhook endpoint will be:
+```
+https://your-project.vercel.app/api/webhook
+```
 
-### Contact
-- Basic info (name, email, phone)
-- Company and position
-- Tags for categorization
-- Notes and timestamps
+## 📝 Supported Events
 
-### Deal
-- Sales opportunity tracking
-- Pipeline stages (lead → closed)
-- Value and probability
-- Expected close dates
+- `customer.subscription.created` - New subscription
+- `customer.subscription.updated` - Subscription changes
+- `customer.subscription.deleted` - Subscription cancelled
+- `invoice.payment_succeeded` - Payment successful
+- `invoice.payment_failed` - Payment failed
+- `customer.updated` - Customer details updated
 
-### Task
-- To-do items with priorities
-- Due dates and completion status
-- Related entities (contacts, deals)
-- Priority levels (low, medium, high)
+## 🐛 Troubleshooting
 
-## 🚧 Future Enhancements
+### Check Vercel Logs:
+1. Go to Vercel Dashboard → Functions
+2. Click on webhook function
+3. Check logs for errors
 
-- Email integration
-- Calendar sync
-- Advanced reporting
-- Mobile app
-- Team collaboration
-- API integrations
+### Test Webhook:
+1. Go to Stripe Dashboard → Webhooks
+2. Click "Send test webhook"
+3. Choose an event type
+4. Check if it succeeds
 
-## 🤝 Contributing
+## 🔒 Security
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
-
-## 📄 License
-
-This project is licensed under the MIT License.
-
-## 🆘 Support
-
-For support and questions, please open an issue in the repository.
-
----
-
-Built with ❤️ for solo professionals and freelancers who need a simple, powerful CRM. 
+- Webhook signature verification is enabled
+- Only POST requests are accepted
+- All Stripe events are validated before processing 
