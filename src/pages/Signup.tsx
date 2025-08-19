@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { redirectToStripeCheckout } from '../utils/stripeCheckout';
+import { checkExistingSubscription } from '../utils/stripe';
 
 const Signup: React.FC = () => {
     const { signup } = useAuth();
@@ -41,16 +42,30 @@ const Signup: React.FC = () => {
         }
 
         try {
+            // Check if user already has a subscription
+            const existingSubscription = await checkExistingSubscription(formData.email);
+
+            if (existingSubscription && ['active', 'trialing'].includes(existingSubscription.status)) {
+                // User already has an active subscription, redirect to dashboard
+                setError('');
+                setLoading(false);
+                setError('Account created! Redirecting to your existing subscription...');
+                setTimeout(() => {
+                    navigate('/dashboard');
+                }, 2000);
+                return;
+            }
+
             // Create user account
             await signup(formData.email, formData.password, formData.displayName);
 
-            // Show success message
+            // Show success message for new subscription
             setError('');
-
-            // Redirect to Stripe checkout after a brief delay
+            setLoading(false);
+            setError('Account created! Redirecting to payment...');
             setTimeout(() => {
                 redirectToStripeCheckout({ interval: 'monthly' });
-            }, 1000);
+            }, 2000);
 
         } catch (error: any) {
             console.error('Signup error:', error);
@@ -149,10 +164,16 @@ const Signup: React.FC = () => {
                             />
                         </div>
 
-                        {/* Error Message */}
+                        {/* Error/Success Message */}
                         {error && (
-                            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                                <p className="text-red-600 text-sm">{error}</p>
+                            <div className={`rounded-lg p-3 ${error.includes('Account created!')
+                                    ? 'bg-green-50 border border-green-200'
+                                    : 'bg-red-50 border border-red-200'
+                                }`}>
+                                <p className={`text-sm ${error.includes('Account created!')
+                                        ? 'text-green-600'
+                                        : 'text-red-600'
+                                    }`}>{error}</p>
                             </div>
                         )}
 

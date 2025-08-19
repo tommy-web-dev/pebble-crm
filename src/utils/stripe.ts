@@ -1,4 +1,4 @@
-import { doc, updateDoc, setDoc, getDoc } from 'firebase/firestore';
+import { doc, updateDoc, setDoc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { UserSubscription } from '../types';
 
@@ -151,6 +151,31 @@ export const createStripeCustomer = async (userId: string, email: string, name: 
     } catch (error) {
         console.error('Error creating Stripe customer:', error);
         throw error;
+    }
+};
+
+// Check if user already has a Stripe subscription by email
+export const checkExistingSubscription = async (email: string): Promise<UserSubscription | null> => {
+    try {
+        // This would typically call your backend to check Stripe
+        // For now, we'll check if there's a user document with this email and subscription
+        const usersRef = collection(db, 'users');
+        const q = query(usersRef, where('email', '==', email));
+        const querySnapshot = await getDocs(q);
+
+        for (const doc of querySnapshot.docs) {
+            const userData = doc.data();
+            if (userData.subscription && userData.subscription.status) {
+                console.log(`Found existing subscription for email: ${email}`);
+                return userData.subscription as UserSubscription;
+            }
+        }
+
+        console.log(`No existing subscription found for email: ${email}`);
+        return null;
+    } catch (error) {
+        console.error('Error checking existing subscription:', error);
+        return null;
     }
 };
 
