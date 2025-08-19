@@ -1,9 +1,23 @@
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 module.exports = async function handler(req, res) {
+    // Handle CORS preflight request
+    if (req.method === 'OPTIONS') {
+        res.setHeader('Access-Control-Allow-Origin', 'https://www.pebblecrm.app');
+        res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+        res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+        res.status(200).end();
+        return;
+    }
+
     if (req.method !== 'GET') {
         return res.status(405).json({ error: 'Method not allowed' });
     }
+
+    // Set CORS headers for actual request
+    res.setHeader('Access-Control-Allow-Origin', 'https://www.pebblecrm.app');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
     const { customerId } = req.query;
 
