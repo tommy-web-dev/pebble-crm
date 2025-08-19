@@ -35,9 +35,12 @@ const Landing: React.FC = () => {
         if (currentUser && subscription && ['active', 'trialing'].includes(subscription.status)) {
             // User already has subscription, redirect to dashboard
             navigate('/dashboard');
+        } else if (currentUser) {
+            // User is logged in but no subscription, go to upgrade page
+            navigate('/upgrade');
         } else {
-            // User needs to subscribe, go to Stripe checkout
-            redirectToStripeCheckout({ interval: 'monthly' });
+            // User not logged in, go to signup page
+            navigate('/signup');
         }
     };
 

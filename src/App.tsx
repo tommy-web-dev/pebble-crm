@@ -4,6 +4,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import { AppProvider } from './contexts/AppContext';
 import { SettingsProvider } from './contexts/SettingsContext';
 import Login from './pages/Login';
+import Signup from './pages/Signup';
 import Landing from './pages/Landing';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
@@ -26,6 +27,7 @@ function App() {
                         <Routes>
                             {/* Public routes */}
                             <Route path="/" element={<Landing />} />
+                            <Route path="/signup" element={<Signup />} />
                             <Route path="/privacy" element={<Privacy />} />
                             <Route path="/terms" element={<Terms />} />
                             <Route path="/upgrade" element={<Upgrade />} />

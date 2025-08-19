@@ -26,9 +26,11 @@ const Upgrade: React.FC = () => {
                 subscription: null
             });
 
-            alert('User document created! Now try accessing the dashboard.');
-            // Redirect to dashboard to test
-            window.location.href = '/dashboard';
+            alert('User document created! Now redirecting to payment...');
+            // Redirect to Stripe checkout
+            setTimeout(() => {
+                redirectToStripeCheckout({ interval: 'monthly' });
+            }, 1000);
         } catch (error) {
             console.error('Error creating user document:', error);
             alert('Error creating user document. Please try again.');
@@ -62,7 +64,7 @@ const Upgrade: React.FC = () => {
                             <strong>Signed in as:</strong> {currentUser.email}
                         </p>
                         <p className="text-sm text-slate-500">
-                            You're logged in but don't have an active subscription
+                            You're logged in! Now let's get you set up with a subscription
                         </p>
                     </div>
                 )}
@@ -120,7 +122,7 @@ const Upgrade: React.FC = () => {
                         onClick={handleStartTrial}
                         className="w-full bg-gradient-to-r from-slate-600 to-blue-600 text-white text-lg font-semibold py-4 px-8 rounded-xl hover:from-slate-700 hover:to-blue-700 focus:ring-4 focus:ring-blue-500/20 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
                     >
-                        Start Free Trial
+                        {currentUser ? 'Continue to Payment' : 'Start Free Trial'}
                     </button>
                 </div>
 
@@ -148,7 +150,7 @@ const Upgrade: React.FC = () => {
                             onClick={handleCreateUserDocument}
                             className="px-4 py-2 bg-slate-600 text-white text-sm font-medium rounded-lg hover:bg-slate-700 transition-colors duration-200"
                         >
-                            Create User Profile
+                            Create Profile & Continue to Payment
                         </button>
                     </div>
                 </div>
