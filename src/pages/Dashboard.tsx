@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '../contexts/AppContext';
 import { useSettings } from '../contexts/SettingsContext';
 import { useAuth } from '../contexts/AuthContext';
+import { getSubscriptionStatus, UserSubscription } from '../utils/stripe';
 
 const Dashboard: React.FC = () => {
     const { contacts, deals, tasks, loading } = useAppStore();
@@ -10,6 +11,7 @@ const Dashboard: React.FC = () => {
     const { formatCurrency } = useSettings();
     const navigate = useNavigate();
     const [monthlyTarget, setMonthlyTarget] = useState<number>(10000);
+    const [subscription, setSubscription] = useState<UserSubscription | null>(null);
 
     // Load monthly target from localStorage
     useEffect(() => {
@@ -18,6 +20,21 @@ const Dashboard: React.FC = () => {
             setMonthlyTarget(parseFloat(savedTarget));
         }
     }, []);
+
+    // Load subscription status
+    useEffect(() => {
+        const loadSubscription = async () => {
+            if (currentUser) {
+                try {
+                    const sub = await getSubscriptionStatus(currentUser.uid);
+                    setSubscription(sub);
+                } catch (error) {
+                    console.error('Error loading subscription:', error);
+                }
+            }
+        };
+        loadSubscription();
+    }, [currentUser]);
 
     // Save monthly target to localStorage
     const handleTargetChange = (value: number) => {
@@ -180,6 +197,36 @@ const Dashboard: React.FC = () => {
                         </button>
                     </div>
                 </div>
+
+                {/* Subscription Status Banner */}
+                {subscription && (
+                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-3">
+                                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                                <div>
+                                    <p className="text-green-800 font-medium">
+                                        {subscription.status === 'trialing' ? 'Free Trial Active' : 'Subscription Active'}
+                                    </p>
+                                    <p className="text-green-600 text-sm">
+                                        {subscription.status === 'trialing'
+                                            ? `Trial ends ${subscription.trialEnd ? new Date(subscription.trialEnd).toLocaleDateString() : 'soon'}`
+                                            : `Plan: ${subscription.planName}`
+                                        }
+                                    </p>
+                                </div>
+                            </div>
+                            {subscription.status === 'trialing' && (
+                                <button
+                                    onClick={() => navigate('/upgrade')}
+                                    className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors duration-200"
+                                >
+                                    Upgrade Now
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                )}
 
                 {/* Key Metrics Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

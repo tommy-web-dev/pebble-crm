@@ -7,6 +7,7 @@ import Login from './pages/Login';
 import Landing from './pages/Landing';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
+import Upgrade from './pages/Upgrade';
 import Dashboard from './pages/Dashboard';
 import Contacts from './pages/Contacts';
 import Pipeline from './pages/Pipeline';
@@ -14,6 +15,7 @@ import Tasks from './pages/Tasks';
 import Settings from './pages/Settings';
 import Layout from './components/Layout';
 import PrivateRoute from './components/PrivateRoute';
+import SubscriptionGuard from './components/SubscriptionGuard';
 
 function App() {
     return (
@@ -26,22 +28,23 @@ function App() {
                             <Route path="/" element={<Landing />} />
                             <Route path="/privacy" element={<Privacy />} />
                             <Route path="/terms" element={<Terms />} />
+                            <Route path="/upgrade" element={<Upgrade />} />
                             <Route path="/login" element={<Login />} />
 
                             {/* Protected routes with Layout */}
-                            <Route path="/dashboard" element={<PrivateRoute><Layout /></PrivateRoute>}>
+                            <Route path="/dashboard" element={<PrivateRoute><SubscriptionGuard><Layout /></SubscriptionGuard></PrivateRoute>}>
                                 <Route index element={<Dashboard />} />
                             </Route>
-                            <Route path="/contacts" element={<PrivateRoute><Layout /></PrivateRoute>}>
+                            <Route path="/contacts" element={<PrivateRoute><SubscriptionGuard><Layout /></SubscriptionGuard></PrivateRoute>}>
                                 <Route index element={<Contacts />} />
                             </Route>
-                            <Route path="/pipeline" element={<PrivateRoute><Layout /></PrivateRoute>}>
+                            <Route path="/pipeline" element={<PrivateRoute><SubscriptionGuard><Layout /></SubscriptionGuard></PrivateRoute>}>
                                 <Route index element={<Pipeline />} />
                             </Route>
-                            <Route path="/tasks" element={<PrivateRoute><Layout /></PrivateRoute>}>
+                            <Route path="/tasks" element={<PrivateRoute><SubscriptionGuard><Layout /></SubscriptionGuard></PrivateRoute>}>
                                 <Route index element={<Tasks />} />
                             </Route>
-                            <Route path="/settings" element={<PrivateRoute><Layout /></PrivateRoute>}>
+                            <Route path="/settings" element={<PrivateRoute><SubscriptionGuard><Layout /></SubscriptionGuard></PrivateRoute>}>
                                 <Route index element={<Settings />} />
                             </Route>
                         </Routes>
