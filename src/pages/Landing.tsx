@@ -6,7 +6,7 @@ import { getSubscriptionStatus } from '../utils/stripe';
 import { UserSubscription } from '../types';
 
 const Landing: React.FC = () => {
-    const { currentUser } = useAuth();
+    const { currentUser, logout } = useAuth();
     const navigate = useNavigate();
     const [subscription, setSubscription] = useState<UserSubscription | null>(null);
     const [checkingSubscription, setCheckingSubscription] = useState(false);
@@ -42,6 +42,16 @@ const Landing: React.FC = () => {
         } else {
             // User not logged in, go to signup page
             navigate('/signup');
+        }
+    };
+
+    // Handle sign out
+    const handleSignOut = async () => {
+        try {
+            await logout();
+            navigate('/');
+        } catch (error) {
+            console.error('Error signing out:', error);
         }
     };
 
@@ -220,6 +230,12 @@ const Landing: React.FC = () => {
                                     >
                                         Open CRM
                                     </Link>
+                                    <button
+                                        onClick={handleSignOut}
+                                        className="px-4 py-2 bg-slate-600 text-white text-sm font-semibold rounded-lg hover:bg-slate-700 focus:ring-4 focus:ring-slate-500/20 focus:ring-offset-2 transition-all duration-200"
+                                    >
+                                        Sign Out
+                                    </button>
                                 </>
                             ) : (
                                 <>
