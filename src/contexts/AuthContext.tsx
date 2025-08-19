@@ -10,6 +10,8 @@ import {
     updateProfile
 } from 'firebase/auth';
 import { auth } from '../config/firebase';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { db } from '../config/firebase';
 
 // Extended User interface to include Firebase auth properties
 interface User {
@@ -30,6 +32,7 @@ interface AuthContextType {
     resetPassword: (email: string) => Promise<void>;
     sendVerificationEmail: () => Promise<void>;
     updateUserProfile: (displayName: string) => Promise<void>;
+    ensureUserDocument?: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -60,6 +63,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
         // Send verification email
         if (result.user) {
             await sendEmailVerification(result.user);
+        }
+
+        // Ensure user document is created in Firestore
+        if (result.user) {
+            await ensureUserDocument(result.user);
         }
     }
 
@@ -92,8 +100,41 @@ export function AuthProvider({ children }: AuthProviderProps) {
         }
     }
 
+    // Function to create or update user document in Firestore
+    async function ensureUserDocument(firebaseUser: FirebaseUser) {
+        try {
+            const userRef = doc(db, 'users', firebaseUser.uid);
+            const userDoc = await getDoc(userRef);
+
+            if (!userDoc.exists()) {
+                // Create new user document
+                await setDoc(userRef, {
+                    uid: firebaseUser.uid,
+                    email: firebaseUser.email || '',
+                    displayName: firebaseUser.displayName || undefined,
+                    photoURL: firebaseUser.photoURL || undefined,
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                    subscription: null
+                });
+                console.log('Created new user document for:', firebaseUser.email);
+            } else {
+                // Update existing user document with latest info
+                await setDoc(userRef, {
+                    email: firebaseUser.email || '',
+                    displayName: firebaseUser.displayName || undefined,
+                    photoURL: firebaseUser.photoURL || undefined,
+                    updatedAt: new Date()
+                }, { merge: true });
+                console.log('Updated existing user document for:', firebaseUser.email);
+            }
+        } catch (error) {
+            console.error('Error ensuring user document:', error);
+        }
+    }
+
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (firebaseUser: FirebaseUser | null) => {
+        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
             if (firebaseUser) {
                 const user: User = {
                     uid: firebaseUser.uid,
@@ -104,6 +145,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
                     createdAt: new Date(),
                 };
                 setCurrentUser(user);
+
+                // Ensure user document exists in Firestore
+                await ensureUserDocument(firebaseUser);
             } else {
                 setCurrentUser(null);
             }
@@ -121,7 +165,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         logout,
         resetPassword,
         sendVerificationEmail,
-        updateUserProfile
+        updateUserProfile,
+        ensureUserDocument: currentUser ? () => ensureUserDocument(auth.currentUser!) : undefined
     };
 
     return (

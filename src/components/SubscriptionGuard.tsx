@@ -13,6 +13,7 @@ const SubscriptionGuard: React.FC<SubscriptionGuardProps> = ({ children }) => {
     const navigate = useNavigate();
     const [subscription, setSubscription] = useState<UserSubscription | null>(null);
     const [loading, setLoading] = useState(true);
+    const [retryCount, setRetryCount] = useState(0);
 
     useEffect(() => {
         const checkSubscription = async () => {
@@ -32,7 +33,22 @@ const SubscriptionGuard: React.FC<SubscriptionGuardProps> = ({ children }) => {
                 }
             } catch (error) {
                 console.error('Error checking subscription:', error);
-                // On error, redirect to payment to be safe
+
+                // Check if it's a "user not found" error vs other errors
+                if (error && typeof error === 'object' && 'message' in error &&
+                    typeof error.message === 'string' &&
+                    error.message.includes('User document not found') &&
+                    retryCount < 3) {
+                    // User document doesn't exist yet, wait a bit for it to be created
+                    console.log(`User document not found, retry ${retryCount + 1}/3, waiting for creation...`);
+                    setRetryCount(prev => prev + 1);
+                    setTimeout(() => {
+                        checkSubscription();
+                    }, 1000); // Wait 1 second and try again
+                    return;
+                }
+
+                // On other errors, redirect to payment to be safe
                 navigate('/upgrade', { replace: true });
                 return;
             } finally {

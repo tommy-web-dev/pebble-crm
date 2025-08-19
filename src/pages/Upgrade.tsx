@@ -2,13 +2,38 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { redirectToStripeCheckout } from '../utils/stripeCheckout';
+import { doc, setDoc } from 'firebase/firestore';
+import { db } from '../config/firebase';
 
 const Upgrade: React.FC = () => {
     const { currentUser } = useAuth();
 
-      const handleStartTrial = () => {
-    redirectToStripeCheckout({ interval: 'monthly' });
-  };
+    const handleStartTrial = () => {
+        redirectToStripeCheckout({ interval: 'monthly' });
+    };
+
+    const handleCreateUserDocument = async () => {
+        if (!currentUser) return;
+
+        try {
+            await setDoc(doc(db, 'users', currentUser.uid), {
+                uid: currentUser.uid,
+                email: currentUser.email,
+                displayName: currentUser.displayName,
+                photoURL: currentUser.photoURL,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+                subscription: null
+            });
+
+            alert('User document created! Now try accessing the dashboard.');
+            // Redirect to dashboard to test
+            window.location.href = '/dashboard';
+        } catch (error) {
+            console.error('Error creating user document:', error);
+            alert('Error creating user document. Please try again.');
+        }
+    };
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center px-4">
@@ -107,12 +132,25 @@ const Upgrade: React.FC = () => {
                             Go to Dashboard
                         </Link>
                     </p>
-                    <p>
+                    <p className="mb-4">
                         Need help? Contact us at{' '}
                         <a href="mailto:support@pebblecrm.app" className="text-blue-600 hover:text-blue-800 underline">
                             support@pebblecrm.app
                         </a>
                     </p>
+
+                    {/* Manual User Document Creation */}
+                    <div className="border-t border-slate-200 pt-4">
+                        <p className="text-sm text-slate-600 mb-2">
+                            Having trouble? Try manually creating your user profile:
+                        </p>
+                        <button
+                            onClick={handleCreateUserDocument}
+                            className="px-4 py-2 bg-slate-600 text-white text-sm font-medium rounded-lg hover:bg-slate-700 transition-colors duration-200"
+                        >
+                            Create User Profile
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

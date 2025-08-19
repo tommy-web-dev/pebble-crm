@@ -158,13 +158,17 @@ export const getSubscriptionStatus = async (userId: string): Promise<UserSubscri
     try {
         const userDoc = await getDoc(doc(db, 'users', userId));
 
-        if (userDoc.exists() && userDoc.data().subscription) {
+        if (!userDoc.exists()) {
+            throw new Error('User document not found');
+        }
+
+        if (userDoc.data().subscription) {
             return userDoc.data().subscription as UserSubscription;
         }
 
         return null;
     } catch (error) {
         console.error('Error getting subscription status:', error);
-        return null;
+        throw error; // Re-throw to let caller handle it
     }
 }; 
