@@ -59,7 +59,7 @@ const Login: React.FC = () => {
             case 'reset':
                 return (
                     <div>
-                        <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                        <label htmlFor="email" className="block text-sm font-semibold text-slate-700 mb-3">
                             Email address
                         </label>
                         <input
@@ -70,7 +70,7 @@ const Login: React.FC = () => {
                             required
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            className="input mt-1"
+                            className="block w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
                             placeholder="Enter your email"
                         />
                     </div>
@@ -80,29 +80,29 @@ const Login: React.FC = () => {
                 return (
                     <div className="text-center">
                         <div className="text-6xl mb-4">📧</div>
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">Check your email</h3>
-                        <p className="text-gray-600 mb-6">
+                        <h3 className="text-lg font-medium text-slate-900 mb-2">Check your email</h3>
+                        <p className="text-slate-600 mb-6">
                             We've sent a verification link to <strong>{email}</strong>
                         </p>
                         <div className="space-y-3">
                             <button
                                 type="button"
                                 onClick={handleResendVerification}
-                                className="btn-secondary w-full"
+                                className="w-full px-4 py-3 bg-slate-600 text-white text-sm font-semibold rounded-xl hover:bg-slate-700 focus:ring-4 focus:ring-slate-500/20 focus:ring-offset-2 transition-all duration-200"
                             >
                                 Resend verification email
                             </button>
                             <button
                                 type="button"
                                 onClick={() => setMode('login')}
-                                className="text-primary-600 hover:text-primary-500 text-sm"
+                                className="text-blue-600 hover:text-blue-500 text-sm font-medium"
                             >
                                 Back to login
                             </button>
                             <button
                                 type="button"
                                 onClick={() => navigate('/dashboard')}
-                                className="btn-primary w-full"
+                                className="w-full px-4 py-3 bg-gradient-to-r from-slate-600 to-blue-600 text-white text-sm font-semibold rounded-xl hover:from-slate-700 hover:to-blue-700 focus:ring-4 focus:ring-blue-500/20 focus:ring-offset-2 transition-all duration-200"
                             >
                                 Go to Dashboard
                             </button>
@@ -114,7 +114,7 @@ const Login: React.FC = () => {
                 return (
                     <>
                         <div>
-                            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                            <label htmlFor="email" className="block text-sm font-semibold text-slate-700 mb-3">
                                 Email address
                             </label>
                             <input
@@ -125,13 +125,13 @@ const Login: React.FC = () => {
                                 required
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                className="input mt-1"
+                                className="block w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
                                 placeholder="Enter your email"
                             />
                         </div>
 
                         <div>
-                            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                            <label htmlFor="password" className="block text-sm font-semibold text-slate-700 mb-3">
                                 Password
                             </label>
                             <input
@@ -142,7 +142,7 @@ const Login: React.FC = () => {
                                 required
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="input mt-1"
+                                className="block w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
                                 placeholder="Enter your password"
                             />
                         </div>
@@ -174,7 +174,7 @@ const Login: React.FC = () => {
             default:
                 return {
                     title: 'Sign in to your account',
-                    subtitle: 'Welcome back to Pebble.io',
+                    subtitle: 'Welcome back to Pebble',
                     buttonText: 'Sign In',
                     switchText: '',
                     switchAction: '',
@@ -187,13 +187,20 @@ const Login: React.FC = () => {
 
     if (mode === 'verify') {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-blue-50/30 py-12 px-4 sm:px-6 lg:px-8">
                 <div className="max-w-md w-full space-y-8">
-                    <div>
-                        <h1 className="text-center text-3xl font-bold text-primary-600">Pebble.io</h1>
+                    <div className="text-center">
+                        <div className="flex items-center justify-center space-x-3 mb-6">
+                            <div className="w-12 h-12 bg-gradient-to-br from-slate-700 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+                                <span className="text-white font-bold text-2xl">P</span>
+                            </div>
+                            <span className="text-3xl font-bold bg-gradient-to-r from-slate-700 to-blue-600 bg-clip-text text-transparent">
+                                Pebble
+                            </span>
+                        </div>
                     </div>
 
-                    <div className="card">
+                    <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-8">
                         {renderForm()}
                     </div>
                 </div>
@@ -202,68 +209,77 @@ const Login: React.FC = () => {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-blue-50/30 py-12 px-4 sm:px-6 lg:px-8">
             <div className="max-w-md w-full space-y-8">
-                <div>
-                    <h1 className="text-center text-3xl font-bold text-primary-600">Pebble.io</h1>
-                    <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+                <div className="text-center">
+                    <div className="flex items-center justify-center space-x-3 mb-6">
+                        <div className="w-12 h-12 bg-gradient-to-br from-slate-700 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+                            <span className="text-white font-bold text-2xl">P</span>
+                        </div>
+                        <span className="text-3xl font-bold bg-gradient-to-r from-slate-700 to-blue-600 bg-clip-text text-transparent">
+                            Pebble
+                        </span>
+                    </div>
+                    <h2 className="text-3xl font-bold text-slate-900 mb-2">
                         {modeInfo.title}
                     </h2>
-                    <p className="mt-2 text-center text-sm text-gray-600">
+                    <p className="text-slate-600 font-medium">
                         {modeInfo.subtitle}
                     </p>
                 </div>
 
-                <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-                    {error && (
-                        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
-                            {error}
+                <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-8">
+                    <form className="space-y-6" onSubmit={handleSubmit}>
+                        {error && (
+                            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
+                                {error}
+                            </div>
+                        )}
+
+                        {success && (
+                            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl text-sm">
+                                {success}
+                            </div>
+                        )}
+
+                        <div className="space-y-6">
+                            {renderForm()}
                         </div>
-                    )}
 
-                    {success && (
-                        <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-md">
-                            {success}
+                        {mode === 'login' && (
+                            <div className="flex items-center justify-between">
+                                <button
+                                    type="button"
+                                    onClick={() => setMode('reset')}
+                                    className="text-sm text-blue-600 hover:text-blue-500 font-medium transition-colors duration-200"
+                                >
+                                    Forgot your password?
+                                </button>
+                            </div>
+                        )}
+
+                        {modeInfo.buttonText && (
+                            <div>
+                                <button
+                                    type="submit"
+                                    disabled={loading}
+                                    className="w-full px-4 py-3 bg-gradient-to-r from-slate-600 to-blue-600 text-white text-sm font-semibold rounded-xl hover:from-slate-700 hover:to-blue-700 focus:ring-4 focus:ring-blue-500/20 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {loading ? 'Loading...' : modeInfo.buttonText}
+                                </button>
+                            </div>
+                        )}
+
+                        <div className="text-center">
+                            <p className="text-sm text-slate-600">
+                                Don't have an account?{' '}
+                                <Link to="/signup" className="text-blue-600 hover:text-blue-500 font-medium transition-colors duration-200">
+                                    Sign up here
+                                </Link>
+                            </p>
                         </div>
-                    )}
-
-                    <div className="space-y-4">
-                        {renderForm()}
-                    </div>
-
-                    {mode === 'login' && (
-                        <div className="flex items-center justify-between">
-                            <button
-                                type="button"
-                                onClick={() => setMode('reset')}
-                                className="text-sm text-primary-600 hover:text-primary-500"
-                            >
-                                Forgot your password?
-                            </button>
-                        </div>
-                    )}
-
-                    {modeInfo.buttonText && (
-                        <div>
-                            <button
-                                type="submit"
-                                disabled={loading}
-                                className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                {loading ? 'Loading...' : modeInfo.buttonText}
-                            </button>
-                        </div>
-                    )}
-
-                    <div className="text-center">
-                        <p className="text-sm text-gray-600">
-                            Don't have an account?{' '}
-                            <Link to="/signup" className="text-primary-600 hover:text-primary-500 font-medium">
-                                Sign up here
-                            </Link>
-                        </p>
-                    </div>
-                </form>
+                    </form>
+                </div>
             </div>
         </div>
     );
