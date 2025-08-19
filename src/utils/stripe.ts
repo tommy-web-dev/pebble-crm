@@ -218,20 +218,43 @@ export const getSubscriptionStatus = async (userId: string): Promise<UserSubscri
                     console.log(`Retrieved subscription data from Stripe:`, stripeData);
 
                     if (stripeData.subscription) {
-                        // Create subscription object
+                        // Debug: Log the specific timestamp values
+                        console.log(`Subscription timestamps:`, {
+                            current_period_start: stripeData.subscription.current_period_start,
+                            current_period_end: stripeData.subscription.current_period_end,
+                            trial_start: stripeData.subscription.trial_start,
+                            trial_end: stripeData.subscription.trial_end,
+                            status: stripeData.subscription.status
+                        });
+
+                        // Helper function to safely parse Stripe timestamps
+                        const safeParseDate = (timestamp: number | undefined): Date | undefined => {
+                            if (!timestamp || typeof timestamp !== 'number') return undefined;
+                            try {
+                                const date = new Date(timestamp * 1000);
+                                return isNaN(date.getTime()) ? undefined : date;
+                            } catch (error) {
+                                console.warn('Invalid timestamp:', timestamp, error);
+                                return undefined;
+                            }
+                        };
+
+                        // Create subscription object with safe date parsing
                         const subscriptionData: UserSubscription = {
                             stripeCustomerId: userData.stripeCustomerId,
                             stripeSubscriptionId: stripeData.subscription.id,
                             status: stripeData.subscription.status,
                             planName: 'Pebble CRM - Professional Plan',
-                            currentPeriodStart: new Date(stripeData.subscription.current_period_start * 1000),
-                            currentPeriodEnd: new Date(stripeData.subscription.current_period_end * 1000),
-                            trialStart: stripeData.subscription.trial_start ? new Date(stripeData.subscription.trial_start * 1000) : undefined,
-                            trialEnd: stripeData.subscription.trial_end ? new Date(stripeData.subscription.trial_end * 1000) : undefined,
-                            cancelAtPeriodEnd: stripeData.subscription.cancel_at_period_end,
+                            currentPeriodStart: safeParseDate(stripeData.subscription.current_period_start) || new Date(),
+                            currentPeriodEnd: safeParseDate(stripeData.subscription.current_period_end) || new Date(),
+                            trialStart: safeParseDate(stripeData.subscription.trial_start),
+                            trialEnd: safeParseDate(stripeData.subscription.trial_end),
+                            cancelAtPeriodEnd: stripeData.subscription.cancel_at_period_end || false,
                             createdAt: new Date(),
                             updatedAt: new Date()
                         };
+
+                        console.log(`Created subscription data object:`, subscriptionData);
 
                         // Update Firebase with the subscription data
                         await updateDoc(doc(db, 'users', userId), {
