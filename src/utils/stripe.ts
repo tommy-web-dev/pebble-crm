@@ -1,5 +1,6 @@
 import { doc, updateDoc, setDoc, getDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
+import { UserSubscription } from '../types';
 
 export interface StripeSubscription {
     id: string;
@@ -12,19 +13,7 @@ export interface StripeSubscription {
     customer: string;
 }
 
-export interface UserSubscription {
-    stripeCustomerId: string;
-    stripeSubscriptionId: string;
-    status: string;
-    planName: string;
-    currentPeriodStart: Date;
-    currentPeriodEnd: Date;
-    trialStart?: Date;
-    trialEnd?: Date;
-    cancelAtPeriodEnd: boolean;
-    createdAt: Date;
-    updatedAt: Date;
-}
+
 
 export const handleStripeWebhook = async (event: any) => {
     try {
