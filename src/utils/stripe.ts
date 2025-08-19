@@ -194,9 +194,30 @@ export const getSubscriptionStatus = async (userId: string): Promise<UserSubscri
         }
 
         const userData = userDoc.data();
+        console.log(`Checking subscription for user ${userId}:`, userData);
 
         if (userData.subscription) {
+            console.log(`Found subscription in user document:`, userData.subscription);
             return userData.subscription as UserSubscription;
+        }
+
+        // No subscription found in current user document
+        // Check if there's another user document with the same email that has a subscription
+        if (userData.email) {
+            console.log(`No subscription found for user ${userId}, checking for existing subscription with email: ${userData.email}`);
+            const existingSubscription = await checkExistingSubscription(userData.email);
+
+            if (existingSubscription) {
+                console.log(`Found existing subscription for email ${userData.email}, linking to user ${userId}`);
+
+                // Link the existing subscription to this user
+                await updateDoc(doc(db, 'users', userId), {
+                    subscription: existingSubscription,
+                    updatedAt: new Date()
+                });
+
+                return existingSubscription;
+            }
         }
 
         // No subscription found - this is normal for new users
