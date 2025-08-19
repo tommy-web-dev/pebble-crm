@@ -1,6 +1,6 @@
-# Pebble Stripe API
+# Pebble CRM
 
-Stripe webhook API for Pebble CRM that handles subscription events and syncs data to Firestore.
+A lightweight, modern CRM for solo professionals and freelancers with Stripe subscription integration.
 
 ## 🚀 Quick Setup
 
