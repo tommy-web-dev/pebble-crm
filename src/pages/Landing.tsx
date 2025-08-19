@@ -473,7 +473,7 @@ const Landing: React.FC = () => {
                                 </ul>
 
                                 <button
-                                    onClick={() => handleCheckout('monthly')}
+                                    onClick={handleStartFreeTrial}
                                     className="w-full px-6 py-3 bg-gradient-to-r from-slate-600 to-blue-600 text-white rounded-xl font-semibold hover:from-slate-700 hover:to-blue-700 shadow-lg hover:shadow-xl transition-all duration-200"
                                 >
                                     Start Free Trial!
@@ -518,7 +518,7 @@ const Landing: React.FC = () => {
                         Join other Solo Professionals & Freelancers using Pebble.
                     </p>
                     <button
-                        onClick={() => handleCheckout('monthly')}
+                        onClick={handleStartFreeTrial}
                         className="inline-block px-8 py-4 bg-gradient-to-r from-white to-slate-100 text-slate-900 text-lg font-semibold rounded-xl hover:from-slate-100 hover:to-white focus:ring-4 focus:ring-white/20 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
                     >
                         Start Free Trial!
