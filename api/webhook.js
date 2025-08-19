@@ -20,7 +20,19 @@ module.exports = async function handler(req, res) {
         return res.status(405).json({ error: 'Method not allowed' });
     }
 
+    // Check if this is a test request (no Stripe signature)
     const sig = req.headers['stripe-signature'];
+
+    if (!sig) {
+        // This is a test request, return success
+        console.log('Test request received');
+        return res.status(200).json({
+            message: 'Webhook endpoint is working!',
+            timestamp: new Date().toISOString(),
+            test: true
+        });
+    }
+
     const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
     let event;
