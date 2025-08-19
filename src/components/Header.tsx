@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAppStore } from '../contexts/AppContext';
 import { useAuth } from '../contexts/AuthContext';
-import { getSubscriptionStatus, UserSubscription } from '../utils/stripe';
+import { getSubscriptionStatus } from '../utils/stripe';
+import { UserSubscription } from '../types';
 
 const Header: React.FC = () => {
     const { sidebarOpen, setSidebarOpen } = useAppStore();

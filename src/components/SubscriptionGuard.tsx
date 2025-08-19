@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { getSubscriptionStatus, UserSubscription } from '../utils/stripe';
+import { getSubscriptionStatus } from '../utils/stripe';
+import { UserSubscription } from '../types';
 
 interface SubscriptionGuardProps {
     children: React.ReactNode;

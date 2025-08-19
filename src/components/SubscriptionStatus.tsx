@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { UserSubscription, getSubscriptionStatus } from '../utils/stripe';
+import { getSubscriptionStatus } from '../utils/stripe';
+import { UserSubscription } from '../types';
 
 const SubscriptionStatus: React.FC = () => {
     const { currentUser } = useAuth();

@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '../contexts/AppContext';
 import { useSettings } from '../contexts/SettingsContext';
 import { useAuth } from '../contexts/AuthContext';
-import { getSubscriptionStatus, UserSubscription } from '../utils/stripe';
+import { getSubscriptionStatus } from '../utils/stripe';
+import { UserSubscription } from '../types';
 
 const Dashboard: React.FC = () => {
     const { contacts, deals, tasks, loading } = useAppStore();
