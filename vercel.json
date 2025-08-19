@@ -17,18 +17,14 @@
             }
         }
     ],
-    "functions": {
-        "api/webhook.js": {
-            "maxDuration": 30
-        },
-        "api/test.js": {
-            "maxDuration": 10
-        }
-    },
     "rewrites": [
         {
             "source": "/api/webhook",
             "destination": "/api/webhook.js"
+        },
+        {
+            "source": "/api/test",
+            "destination": "/api/test.js"
         }
     ]
 }
