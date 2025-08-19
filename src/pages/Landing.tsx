@@ -2,10 +2,44 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { redirectToStripeCheckout } from '../utils/stripeCheckout';
+import { getSubscriptionStatus } from '../utils/stripe';
+import { UserSubscription } from '../types';
 
 const Landing: React.FC = () => {
     const { currentUser } = useAuth();
     const navigate = useNavigate();
+    const [subscription, setSubscription] = useState<UserSubscription | null>(null);
+    const [checkingSubscription, setCheckingSubscription] = useState(false);
+
+    // Check subscription status when user is logged in
+    useEffect(() => {
+        const checkSubscription = async () => {
+            if (currentUser) {
+                setCheckingSubscription(true);
+                try {
+                    const sub = await getSubscriptionStatus(currentUser.uid);
+                    setSubscription(sub);
+                } catch (error) {
+                    console.error('Error checking subscription:', error);
+                } finally {
+                    setCheckingSubscription(false);
+                }
+            }
+        };
+
+        checkSubscription();
+    }, [currentUser]);
+
+    // Smart "Start Free Trial" handler
+    const handleStartFreeTrial = () => {
+        if (currentUser && subscription && ['active', 'trialing'].includes(subscription.status)) {
+            // User already has subscription, redirect to dashboard
+            navigate('/dashboard');
+        } else {
+            // User needs to subscribe, go to Stripe checkout
+            redirectToStripeCheckout({ interval: 'monthly' });
+        }
+    };
 
     // Don't auto-redirect - let users choose to stay on landing page or go to dashboard
 
@@ -192,10 +226,13 @@ const Landing: React.FC = () => {
                                         Sign In
                                     </Link>
                                     <button
-                                        onClick={() => handleCheckout('monthly')}
+                                        onClick={handleStartFreeTrial}
                                         className="px-4 py-2 bg-gradient-to-r from-slate-600 to-blue-600 text-sm font-semibold rounded-lg hover:from-slate-700 hover:to-blue-700 focus:ring-4 focus:ring-blue-500/20 focus:ring-offset-2 transition-all duration-200"
                                     >
-                                        Start Free Trial!
+                                        {currentUser && subscription && ['active', 'trialing'].includes(subscription.status)
+                                            ? 'Open CRM'
+                                            : 'Start Free Trial!'
+                                        }
                                     </button>
                                 </>
                             )}
@@ -232,11 +269,14 @@ const Landing: React.FC = () => {
 
                     <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4 mb-12">
                         <button
-                            onClick={() => handleCheckout('monthly')}
+                            onClick={handleStartFreeTrial}
                             className="group px-8 py-4 bg-gradient-to-r from-slate-600 to-blue-600 text-white text-lg font-semibold rounded-xl hover:from-slate-700 hover:to-blue-700 focus:ring-4 focus:ring-blue-500/20 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
                         >
                             <span className="flex items-center">
-                                Start Free Trial!
+                                {currentUser && subscription && ['active', 'trialing'].includes(subscription.status)
+                                    ? 'Open CRM Dashboard'
+                                    : 'Start Free Trial!'
+                                }
                                 <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                                 </svg>
@@ -259,6 +299,43 @@ const Landing: React.FC = () => {
                     </div>
                 </div>
             </section>
+
+            {/* Subscription Status Banner for Logged-in Users */}
+            {currentUser && checkingSubscription && (
+                <section className="py-8 px-4 sm:px-6 lg:px-8 bg-slate-50 border-y border-slate-200">
+                    <div className="max-w-7xl mx-auto text-center">
+                        <div className="inline-flex items-center px-6 py-3 bg-slate-100 rounded-full text-slate-800 font-medium">
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-slate-600 mr-3"></div>
+                            Checking subscription status...
+                        </div>
+                    </div>
+                </section>
+            )}
+
+            {currentUser && subscription && ['active', 'trialing'].includes(subscription.status) && (
+                <section className="py-8 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-green-50 to-emerald-50 border-y border-green-200">
+                    <div className="max-w-7xl mx-auto text-center">
+                        <div className="inline-flex items-center px-6 py-3 bg-green-100 rounded-full text-green-800 font-medium">
+                            <div className="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
+                            <span>
+                                {subscription.status === 'trialing'
+                                    ? `Free Trial Active - Ends ${subscription.trialEnd ? new Date(subscription.trialEnd).toLocaleDateString() : 'soon'}`
+                                    : 'Subscription Active'
+                                }
+                            </span>
+                        </div>
+                        <p className="mt-3 text-green-700">
+                            You already have access to Pebble CRM!{' '}
+                            <button
+                                onClick={() => navigate('/dashboard')}
+                                className="text-green-800 font-semibold underline hover:text-green-900"
+                            >
+                                Go to Dashboard
+                            </button>
+                        </p>
+                    </div>
+                </section>
+            )}
 
             {/* Features Section */}
             <section id="features" className="py-20 px-4 sm:px-6 lg:px-8">
