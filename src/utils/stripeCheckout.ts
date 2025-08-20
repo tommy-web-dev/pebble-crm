@@ -1,6 +1,8 @@
 // This utility handles Stripe checkout flow
 // You'll need to implement the backend endpoint to create checkout sessions
 
+import { auth } from '../config/firebase';
+
 export interface CheckoutOptions {
     interval: 'monthly' | 'yearly';
     successUrl?: string;
@@ -65,13 +67,43 @@ export const redirectToStripeCheckout = async (options: CheckoutOptions = { inte
     try {
         console.log('Starting Stripe checkout process...');
 
-        // Redirect directly to the Stripe Payment Link instead of using our custom API
-        const stripePaymentLink = 'https://buy.stripe.com/3cI7sM6A6gho26VgUefjG00';
+        // Get current user for the checkout session
+        const user = auth.currentUser;
+        if (!user) {
+            console.error('No authenticated user found');
+            window.location.href = '/login';
+            return;
+        }
 
-        console.log('Redirecting to Stripe Payment Link:', stripePaymentLink);
+        console.log('User authenticated, UID:', user.uid, 'Email:', user.email);
 
-        // Redirect to the Stripe Payment Link
-        window.location.href = stripePaymentLink;
+        // Create a checkout session with custom success/cancel URLs
+        const response = await fetch('https://pebble-crm.vercel.app/api/create-checkout-session-simple', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                interval: options.interval,
+                userId: user.uid,
+                userEmail: user.email,
+                successUrl: 'https://www.pebblecrm.app/dashboard',
+                cancelUrl: 'https://www.pebblecrm.app/upgrade'
+            }),
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (data.url) {
+            console.log('Redirecting to Stripe checkout:', data.url);
+            window.location.href = data.url;
+        } else {
+            throw new Error('No checkout URL received');
+        }
 
     } catch (error) {
         console.error('Error in Stripe checkout redirect:', error);
