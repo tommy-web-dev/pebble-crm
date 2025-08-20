@@ -30,15 +30,13 @@ export const createStripeCheckout = async (options: CheckoutOptions): Promise<st
                 console.log('User authenticated, UID:', user.uid, 'Email:', user.email);
 
                 // This calls your Express server to create a Stripe checkout session
-                const response = await fetch('https://pebble-crm.vercel.app/api/create-checkout-session', {
+                const response = await fetch('https://pebble-crm.vercel.app/api/create-checkout-session-simple', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
                         interval: options.interval,
-                        successUrl: options.successUrl || `${window.location.origin}/dashboard`,
-                        cancelUrl: options.cancelUrl || `${window.location.origin}/`,
                         userId: user.uid,
                         userEmail: user.email
                     }),
