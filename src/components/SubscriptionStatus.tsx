@@ -7,6 +7,8 @@ const SubscriptionStatus: React.FC = () => {
     const { currentUser } = useAuth();
     const [subscription, setSubscription] = useState<UserSubscription | null>(null);
     const [loading, setLoading] = useState(true);
+    const [cancelling, setCancelling] = useState(false);
+    const [cancelMessage, setCancelMessage] = useState('');
 
     useEffect(() => {
         const loadSubscription = async () => {
@@ -24,6 +26,51 @@ const SubscriptionStatus: React.FC = () => {
 
         loadSubscription();
     }, [currentUser]);
+
+    const handleCancelSubscription = async () => {
+        if (!subscription?.stripeSubscriptionId) {
+            setCancelMessage('No subscription ID found. Please contact support.');
+            return;
+        }
+
+        if (!window.confirm('Are you sure you want to cancel your subscription? You will lose access to Pebble CRM at the end of your current billing period.')) {
+            return;
+        }
+
+        setCancelling(true);
+        setCancelMessage('');
+
+        try {
+            const response = await fetch('https://pebble-crm.vercel.app/api/cancel-subscription', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    subscriptionId: subscription.stripeSubscriptionId,
+                    customerId: subscription.stripeCustomerId
+                }),
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                setCancelMessage('Subscription cancelled successfully. You will have access until the end of your current billing period.');
+                // Refresh subscription data to show updated status
+                if (currentUser) {
+                    const updatedSub = await getSubscriptionStatus(currentUser.uid);
+                    setSubscription(updatedSub);
+                }
+            } else {
+                setCancelMessage(`Failed to cancel subscription: ${data.error}`);
+            }
+        } catch (error) {
+            console.error('Error cancelling subscription:', error);
+            setCancelMessage('An error occurred while cancelling your subscription. Please try again or contact support.');
+        } finally {
+            setCancelling(false);
+        }
+    };
 
     if (loading) {
         return (
@@ -227,14 +274,43 @@ const SubscriptionStatus: React.FC = () => {
             </div>
 
             <div className="mt-6 pt-4 border-t border-gray-200">
-                <a
-                    href="https://billing.stripe.com/p/login/live_aHh01K8vF8mB8cEMM"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                    Manage Billing
-                </a>
+                {cancelMessage && (
+                    <div className={`mb-4 p-3 rounded-md text-sm ${cancelMessage.includes('successfully')
+                            ? 'bg-green-50 text-green-800 border border-green-200'
+                            : 'bg-red-50 text-red-800 border border-red-200'
+                        }`}>
+                        {cancelMessage}
+                    </div>
+                )}
+
+                {subscription.status === 'active' || subscription.status === 'trialing' ? (
+                    <button
+                        onClick={handleCancelSubscription}
+                        disabled={cancelling}
+                        className="inline-flex items-center px-4 py-2 border border-red-300 text-sm font-medium rounded-md text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        {cancelling ? (
+                            <>
+                                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-red-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Cancelling...
+                            </>
+                        ) : (
+                            <>
+                                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                                Cancel Subscription
+                            </>
+                        )}
+                    </button>
+                ) : (
+                    <p className="text-sm text-gray-500">
+                        {subscription.status === 'canceled' ? 'Subscription has been cancelled.' : 'Subscription management not available.'}
+                    </p>
+                )}
             </div>
         </div>
     );
