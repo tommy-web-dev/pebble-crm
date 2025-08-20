@@ -141,8 +141,8 @@ export const testDirectFirestore = async (userId: string) => {
             authDomain: "pebble-99673.firebaseapp.com",
             projectId: "pebble-99673",
             storageBucket: "pebble-99673.firebasestorage.app",
-            messagingSenderId: "680621796702",
-            appId: "1:680621796702:web:2a7e773b5822b463b733cf",
+            messagingSenderId: "680621796802",
+            appId: "1:680621796802:web:2a7e773b5822b463b733cf",
             measurementId: "G-N1FNRPJ8K4"
         };
 
