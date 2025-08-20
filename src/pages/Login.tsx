@@ -11,6 +11,7 @@ const Login: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const [showSignupSuggestion, setShowSignupSuggestion] = useState(false);
 
     const { login, resetPassword, sendVerificationEmail, currentUser } = useAuth();
     const navigate = useNavigate();
@@ -26,6 +27,7 @@ const Login: React.FC = () => {
         e.preventDefault();
         setError('');
         setSuccess('');
+        setShowSignupSuggestion(false);
         setLoading(true);
 
         try {
@@ -39,7 +41,30 @@ const Login: React.FC = () => {
                 setMode('login');
             }
         } catch (err: any) {
-            setError(err.message || 'An error occurred');
+            console.error('Login error:', err);
+
+            // Handle specific Firebase auth errors intelligently
+            if (err.code === 'auth/invalid-credential' ||
+                err.code === 'auth/user-not-found' ||
+                err.code === 'auth/wrong-password') {
+
+                // Show user-friendly message and offer to redirect to signup
+                setError('No account found with these credentials. Would you like to create a new account?');
+                setShowSignupSuggestion(true);
+
+            } else if (err.code === 'auth/too-many-requests') {
+                setError('Too many failed attempts. Please try again later.');
+                setShowSignupSuggestion(false);
+            } else if (err.code === 'auth/user-disabled') {
+                setError('This account has been disabled. Please contact support.');
+                setShowSignupSuggestion(false);
+            } else if (err.code === 'auth/network-request-failed') {
+                setError('Network error. Please check your connection and try again.');
+                setShowSignupSuggestion(false);
+            } else {
+                setError('An error occurred. Please try again.');
+                setShowSignupSuggestion(false);
+            }
         } finally {
             setLoading(false);
         }
@@ -51,6 +76,23 @@ const Login: React.FC = () => {
             setSuccess('Verification email sent!');
         } catch (err: any) {
             setError(err.message || 'Failed to send verification email');
+        }
+    };
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+
+        // Update individual state variables for email and password
+        if (name === 'email') {
+            setEmail(value);
+        } else if (name === 'password') {
+            setPassword(value);
+        }
+
+        // Clear error and signup suggestion when user starts typing
+        if (error) {
+            setError('');
+            setShowSignupSuggestion(false);
         }
     };
 
@@ -69,7 +111,7 @@ const Login: React.FC = () => {
                             autoComplete="email"
                             required
                             value={email}
-                            onChange={(e) => setEmail(e.target.value)}
+                            onChange={handleChange}
                             className="block w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
                             placeholder="Enter your email"
                         />
@@ -124,7 +166,7 @@ const Login: React.FC = () => {
                                 autoComplete="email"
                                 required
                                 value={email}
-                                onChange={(e) => setEmail(e.target.value)}
+                                onChange={handleChange}
                                 className="block w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
                                 placeholder="Enter your email"
                             />
@@ -141,7 +183,7 @@ const Login: React.FC = () => {
                                 autoComplete="current-password"
                                 required
                                 value={password}
-                                onChange={(e) => setPassword(e.target.value)}
+                                onChange={handleChange}
                                 className="block w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
                                 placeholder="Enter your password"
                             />
@@ -233,6 +275,17 @@ const Login: React.FC = () => {
                         {error && (
                             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
                                 {error}
+                                {/* Show signup button for invalid credential errors */}
+                                {showSignupSuggestion && (
+                                    <div className="mt-3 pt-3 border-t border-red-200">
+                                        <Link
+                                            to="/signup"
+                                            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200"
+                                        >
+                                            Create New Account
+                                        </Link>
+                                    </div>
+                                )}
                             </div>
                         )}
 
