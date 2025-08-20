@@ -61,22 +61,21 @@ export const createStripeCheckout = async (options: CheckoutOptions): Promise<st
     }
 };
 
-export const redirectToStripeCheckout = async (options: CheckoutOptions): Promise<void> => {
+export const redirectToStripeCheckout = async (options: CheckoutOptions = { interval: 'monthly' }) => {
     try {
         console.log('Starting Stripe checkout process...');
-        const checkoutUrl = await createStripeCheckout(options);
 
-        if (checkoutUrl) {
-            console.log('Successfully got checkout URL, redirecting to:', checkoutUrl);
-            window.location.href = checkoutUrl;
-        } else {
-            console.error('Failed to get checkout URL');
-            // Fallback to upgrade page if checkout creation fails
-            window.location.href = '/upgrade';
-        }
+        // Redirect directly to the Stripe Payment Link instead of using our custom API
+        const stripePaymentLink = 'https://buy.stripe.com/3cI7sM6A6gho26VgUefjG00';
+
+        console.log('Redirecting to Stripe Payment Link:', stripePaymentLink);
+
+        // Redirect to the Stripe Payment Link
+        window.location.href = stripePaymentLink;
+
     } catch (error) {
-        console.error('Error in redirectToStripeCheckout:', error);
-        // Fallback to upgrade page if checkout creation fails
+        console.error('Error in Stripe checkout redirect:', error);
+        // Fallback to upgrade page if something goes wrong
         window.location.href = '/upgrade';
     }
 };
