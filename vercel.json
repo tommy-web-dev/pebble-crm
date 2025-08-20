@@ -14,6 +14,10 @@
             "use": "@vercel/node"
         },
         {
+            "src": "api/test-firebase.js",
+            "use": "@vercel/node"
+        },
+        {
             "src": "package.json",
             "use": "@vercel/static-build",
             "config": {
@@ -33,6 +37,10 @@
         {
             "source": "/api/get-subscription",
             "destination": "/api/get-subscription.js"
+        },
+        {
+            "source": "/api/test-firebase",
+            "destination": "/api/test-firebase.js"
         },
         {
             "source": "/(.*)",
