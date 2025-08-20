@@ -59,13 +59,25 @@ const Signup: React.FC = () => {
             // Create user account
             await signup(formData.email, formData.password, formData.displayName);
 
-            // Show success message for new subscription
+            // Show success message and wait a moment for Firebase auth to complete
             setError('');
             setLoading(false);
-            setError('Account created! Redirecting to payment...');
-            setTimeout(() => {
-                redirectToStripeCheckout({ interval: 'monthly' });
-            }, 2000);
+            setError('Account created! Setting up your free trial...');
+
+            // Wait a moment for Firebase auth to complete, then redirect
+            setTimeout(async () => {
+                try {
+                    console.log('Attempting Stripe checkout redirect...');
+                    await redirectToStripeCheckout({ interval: 'monthly' });
+                } catch (stripeError) {
+                    console.error('Stripe redirect error:', stripeError);
+                    // If Stripe redirect fails, redirect to upgrade page as fallback
+                    setError('Redirecting to upgrade page...');
+                    setTimeout(() => {
+                        navigate('/upgrade');
+                    }, 1000);
+                }
+            }, 1500);
 
         } catch (error: any) {
             console.error('Signup error:', error);
@@ -167,12 +179,12 @@ const Signup: React.FC = () => {
                         {/* Error/Success Message */}
                         {error && (
                             <div className={`rounded-lg p-3 ${error.includes('Account created!')
-                                    ? 'bg-green-50 border border-green-200'
-                                    : 'bg-red-50 border border-red-200'
+                                ? 'bg-green-50 border border-green-200'
+                                : 'bg-red-50 border border-red-200'
                                 }`}>
                                 <p className={`text-sm ${error.includes('Account created!')
-                                        ? 'text-green-600'
-                                        : 'text-red-600'
+                                    ? 'text-green-600'
+                                    : 'text-red-600'
                                     }`}>{error}</p>
                             </div>
                         )}

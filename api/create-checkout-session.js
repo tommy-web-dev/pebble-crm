@@ -78,6 +78,8 @@ module.exports = async function handler(req, res) {
         }
 
         // Create checkout session
+        // Note: Replace 'price_1RxmEvJp0yoFovcO59Esb7f5' with your actual Stripe price ID
+        // You can find this in your Stripe Dashboard under Products > Pricing
         const session = await stripe.checkout.sessions.create({
             customer: customer.id,
             mode: 'subscription',
@@ -85,17 +87,7 @@ module.exports = async function handler(req, res) {
             billing_address_collection: 'auto',
             line_items: [
                 {
-                    price_data: {
-                        unit_amount: interval === 'monthly' ? 500 : 5000, // £5 or £50 in pence
-                        currency: 'gbp',
-                        product_data: {
-                            name: 'Pebble CRM - Professional Plan',
-                            description: `Professional CRM plan (${interval})`,
-                        },
-                        recurring: {
-                            interval: interval === 'monthly' ? 'month' : 'year',
-                        },
-                    },
+                    price: process.env.STRIPE_PRICE_ID || 'price_1RxmEvJp0yoFovcO59Esb7f5',
                     quantity: 1,
                 },
             ],
@@ -120,6 +112,22 @@ module.exports = async function handler(req, res) {
 
     } catch (error) {
         console.error('Error creating checkout session:', error);
-        res.status(500).json({ error: 'Failed to create checkout session' });
+        console.error('Error details:', {
+            message: error.message,
+            type: error.type,
+            code: error.code,
+            stack: error.stack
+        });
+
+        // Return more specific error information
+        if (error.type === 'StripeCardError') {
+            res.status(400).json({ error: 'Card error: ' + error.message });
+        } else if (error.type === 'StripeInvalidRequestError') {
+            res.status(400).json({ error: 'Invalid request: ' + error.message });
+        } else if (error.type === 'StripeAPIError') {
+            res.status(500).json({ error: 'Stripe API error: ' + error.message });
+        } else {
+            res.status(500).json({ error: 'Failed to create checkout session: ' + error.message });
+        }
     }
 }; 

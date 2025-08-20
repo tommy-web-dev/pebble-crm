@@ -11,6 +11,8 @@ export interface CheckoutOptions {
 
 export const createStripeCheckout = async (options: CheckoutOptions): Promise<string | null> => {
     try {
+        console.log('createStripeCheckout called with options:', options);
+
         // Get current user from Firebase Auth
         const { getAuth, onAuthStateChanged } = await import('firebase/auth');
         const auth = getAuth();
@@ -20,9 +22,12 @@ export const createStripeCheckout = async (options: CheckoutOptions): Promise<st
                 unsubscribe();
 
                 if (!user) {
+                    console.error('User not authenticated in createStripeCheckout');
                     reject(new Error('User not authenticated'));
                     return;
                 }
+
+                console.log('User authenticated, UID:', user.uid, 'Email:', user.email);
 
                 // This calls your Express server to create a Stripe checkout session
                 const response = await fetch('https://pebble-crm.vercel.app/api/create-checkout-session', {
@@ -39,11 +44,16 @@ export const createStripeCheckout = async (options: CheckoutOptions): Promise<st
                     }),
                 });
 
+                console.log('API response status:', response.status);
+
                 if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('API error response:', errorText);
                     throw new Error('Failed to create checkout session');
                 }
 
                 const data = await response.json();
+                console.log('API response data:', data);
                 resolve(data.url); // Stripe checkout URL
             });
         });
@@ -54,13 +64,22 @@ export const createStripeCheckout = async (options: CheckoutOptions): Promise<st
 };
 
 export const redirectToStripeCheckout = async (options: CheckoutOptions): Promise<void> => {
-    const checkoutUrl = await createStripeCheckout(options);
+    try {
+        console.log('Starting Stripe checkout process...');
+        const checkoutUrl = await createStripeCheckout(options);
 
-    if (checkoutUrl) {
-        window.location.href = checkoutUrl;
-    } else {
-        // Fallback to login page if checkout creation fails
-        window.location.href = '/login';
+        if (checkoutUrl) {
+            console.log('Successfully got checkout URL, redirecting to:', checkoutUrl);
+            window.location.href = checkoutUrl;
+        } else {
+            console.error('Failed to get checkout URL');
+            // Fallback to upgrade page if checkout creation fails
+            window.location.href = '/upgrade';
+        }
+    } catch (error) {
+        console.error('Error in redirectToStripeCheckout:', error);
+        // Fallback to upgrade page if checkout creation fails
+        window.location.href = '/upgrade';
     }
 };
 
