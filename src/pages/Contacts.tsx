@@ -196,9 +196,9 @@ const Contacts: React.FC = () => {
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
                     <div className="space-y-2">
                         <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-900 via-blue-900 to-slate-900 bg-clip-text text-transparent">
-                            Contacts
+                            Clients
                         </h1>
-                        <p className="text-lg text-slate-600 font-medium">Manage your business contacts and relationships</p>
+                        <p className="text-lg text-slate-600 font-medium">Manage your client companies and hiring managers</p>
                     </div>
                     <div className="flex items-center space-x-3">
                         <button

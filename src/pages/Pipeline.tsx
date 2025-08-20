@@ -264,8 +264,8 @@ const Pipeline: React.FC = () => {
                 <div className="mb-8">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
                         <div>
-                            <h1 className="text-3xl font-bold text-slate-900 mb-2">Pipeline</h1>
-                            <p className="text-lg text-slate-600 font-medium">Track your opportunities and deals</p>
+                            <h1 className="text-3xl font-bold text-slate-900 mb-2">Jobs</h1>
+                            <p className="text-lg text-slate-600 font-medium">Track job orders and placement opportunities</p>
                         </div>
                         <div className="flex items-center space-x-3 mt-4 sm:mt-0">
                             <button
@@ -275,7 +275,7 @@ const Pipeline: React.FC = () => {
                                 <svg className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                                 </svg>
-                                Add Opportunity
+                                Add Job Order
                             </button>
                         </div>
                     </div>
@@ -287,7 +287,7 @@ const Pipeline: React.FC = () => {
                     <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-6">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-sm font-medium text-slate-600">Closed Won</p>
+                                <p className="text-sm font-medium text-slate-600">Placements</p>
                                 <p className="text-3xl font-bold text-green-600">{summaryMetrics.closedWon.count}</p>
                                 <p className="text-lg text-green-700 font-semibold">{formatCurrency(summaryMetrics.closedWon.value)}</p>
                             </div>
@@ -303,7 +303,7 @@ const Pipeline: React.FC = () => {
                     <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-6">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-sm font-medium text-slate-600">Closed Lost</p>
+                                <p className="text-sm font-medium text-slate-600">Lost Jobs</p>
                                 <p className="text-3xl font-bold text-red-600">{summaryMetrics.closedLost.count}</p>
                                 <p className="text-lg text-red-700 font-semibold">{formatCurrency(summaryMetrics.closedLost.value)}</p>
                             </div>
