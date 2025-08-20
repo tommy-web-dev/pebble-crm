@@ -35,6 +35,15 @@ module.exports = async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
     try {
+        // Debug: Log environment variables (without sensitive data)
+        console.log('Environment check:', {
+            hasStripeKey: !!process.env.STRIPE_SECRET_KEY,
+            hasFirebaseProjectId: !!process.env.FIREBASE_PROJECT_ID,
+            hasFirebaseClientEmail: !!process.env.FIREBASE_CLIENT_EMAIL,
+            hasFirebasePrivateKey: !!process.env.FIREBASE_PRIVATE_KEY,
+            hasFirebaseDatabaseUrl: !!process.env.FIREBASE_DATABASE_URL
+        });
+
         const { interval, successUrl, cancelUrl, userId, userEmail } = req.body;
 
         if (!userId || !userEmail) {
@@ -42,6 +51,19 @@ module.exports = async function handler(req, res) {
         }
 
         console.log(`Creating checkout session for user ${userId} with email ${userEmail}`);
+
+        // Test Firebase Admin connection first
+        try {
+            console.log('Testing Firebase Admin connection...');
+            const testDoc = await db.collection('users').doc('test').get();
+            console.log('Firebase Admin connection successful');
+        } catch (firebaseError) {
+            console.error('Firebase Admin connection failed:', firebaseError);
+            return res.status(500).json({
+                error: 'Firebase connection failed',
+                details: firebaseError.message
+            });
+        }
 
         // Check if user already has a Stripe customer ID
         const userDoc = await db.collection('users').doc(userId).get();

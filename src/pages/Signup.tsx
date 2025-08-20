@@ -64,20 +64,44 @@ const Signup: React.FC = () => {
             setLoading(false);
             setError('Account created! Setting up your free trial...');
 
+            // Add a timeout fallback in case Stripe redirect takes too long
+            const redirectTimeout = setTimeout(() => {
+                console.log('Stripe redirect timeout - redirecting to upgrade page as fallback');
+                setError('Redirecting to upgrade page...');
+                navigate('/upgrade');
+            }, 10000); // 10 second timeout
+
             // Wait a moment for Firebase auth to complete, then redirect
             setTimeout(async () => {
                 try {
                     console.log('Attempting Stripe checkout redirect...');
+                    console.log('Current user state:', { email: formData.email });
+
+                    // Try to redirect to Stripe checkout
                     await redirectToStripeCheckout({ interval: 'monthly' });
+
+                    // Clear timeout if redirect succeeds
+                    clearTimeout(redirectTimeout);
                 } catch (stripeError) {
                     console.error('Stripe redirect error:', stripeError);
+                    // Clear timeout
+                    clearTimeout(redirectTimeout);
                     // If Stripe redirect fails, redirect to upgrade page as fallback
                     setError('Redirecting to upgrade page...');
                     setTimeout(() => {
                         navigate('/upgrade');
                     }, 1000);
                 }
-            }, 1500);
+            }, 2000); // Increased delay to ensure Firebase auth is complete
+
+            // Fallback timeout - if nothing happens within 10 seconds, redirect to upgrade
+            setTimeout(() => {
+                if (!loading) {
+                    console.log('Fallback timeout reached, redirecting to upgrade page');
+                    setError('Taking you to the upgrade page...');
+                    navigate('/upgrade');
+                }
+            }, 10000);
 
         } catch (error: any) {
             console.error('Signup error:', error);
