@@ -3,14 +3,23 @@ const admin = require('firebase-admin');
 
 // Initialize Firebase Admin if not already initialized
 if (!admin.apps.length) {
+    console.log('Initializing Firebase Admin in webhook...');
+
+    // Convert the private key from \n format to actual newlines
+    const privateKey = process.env.FIREBASE_PRIVATE_KEY
+        .replace(/\\n/g, '\n')  // Convert \n to actual newlines
+        .replace(/"/g, '')      // Remove any quotes
+        .trim();                // Remove leading/trailing spaces
+
     admin.initializeApp({
         credential: admin.credential.cert({
             projectId: process.env.FIREBASE_PROJECT_ID,
             clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-            privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+            privateKey: privateKey,
         }),
         databaseURL: process.env.FIREBASE_DATABASE_URL,
     });
+    console.log('Firebase Admin initialized successfully in webhook');
 }
 
 const db = admin.firestore();
