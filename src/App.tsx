@@ -11,7 +11,6 @@ import Terms from './pages/Terms';
 import Upgrade from './pages/Upgrade';
 import Dashboard from './pages/Dashboard';
 import Contacts from './pages/Contacts';
-import Candidates from './pages/Candidates';
 import Pipeline from './pages/Pipeline';
 import Tasks from './pages/Tasks';
 import Settings from './pages/Settings';
@@ -40,9 +39,6 @@ function App() {
                             </Route>
                             <Route path="/contacts" element={<PrivateRoute><SubscriptionGuard><Layout /></SubscriptionGuard></PrivateRoute>}>
                                 <Route index element={<Contacts />} />
-                            </Route>
-                            <Route path="/candidates" element={<PrivateRoute><SubscriptionGuard><Layout /></SubscriptionGuard></PrivateRoute>}>
-                                <Route index element={<Candidates />} />
                             </Route>
                             <Route path="/pipeline" element={<PrivateRoute><SubscriptionGuard><Layout /></SubscriptionGuard></PrivateRoute>}>
                                 <Route index element={<Pipeline />} />

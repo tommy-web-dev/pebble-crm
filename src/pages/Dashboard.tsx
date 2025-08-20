@@ -113,18 +113,8 @@ const Dashboard: React.FC = () => {
                     </button>
 
                     <button
-                        onClick={() => navigate('/candidates')}
-                        className="group inline-flex items-center px-5 py-3 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white text-sm font-semibold rounded-xl hover:from-emerald-700 hover:to-emerald-800 focus:ring-4 focus:ring-emerald-500/20 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
-                    >
-                        <svg className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                        </svg>
-                        Add Candidate
-                    </button>
-
-                    <button
                         onClick={() => navigate('/pipeline')}
-                        className="group inline-flex items-center px-5 py-3 bg-gradient-to-br from-purple-600 to-purple-700 text-white text-sm font-semibold rounded-xl hover:from-purple-700 hover:to-purple-800 focus:ring-4 focus:ring-purple-500/20 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                        className="group inline-flex items-center px-5 py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white text-sm font-semibold rounded-xl hover:from-purple-700 hover:to-purple-800 focus:ring-4 focus:ring-purple-500/20 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
                     >
                         <svg className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M9 11h.01" />
@@ -133,8 +123,8 @@ const Dashboard: React.FC = () => {
                     </button>
                 </div>
 
-                {/* Key Metrics Cards - Optimized for 5 cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+                {/* Key Metrics Cards - Optimized for 4 cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     {/* Clients Card */}
                     <div className="group bg-white rounded-2xl shadow-lg border border-slate-200 p-5 hover:shadow-xl transition-all duration-300 transform hover:scale-105 cursor-pointer" onClick={() => navigate('/contacts')}>
                         <div className="flex items-center justify-between mb-3">
@@ -153,31 +143,7 @@ const Dashboard: React.FC = () => {
                         <p className="text-sm font-medium text-slate-600">Clients</p>
                         <div className="mt-3 flex items-center text-xs text-slate-500">
                             <span>Click to view</span>
-                            <svg className="w-3 h-3 ml-1 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                            </svg>
-                        </div>
-                    </div>
-
-                    {/* Candidates Card */}
-                    <div className="group bg-white rounded-2xl shadow-lg border border-slate-200 p-5 hover:shadow-xl transition-all duration-300 transform hover:scale-105 cursor-pointer" onClick={() => navigate('/candidates')}>
-                        <div className="flex items-center justify-between mb-3">
-                            <div className="p-2.5 bg-gradient-to-br from-emerald-100 to-emerald-200 rounded-xl">
-                                <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                </svg>
-                            </div>
-                            <div className="text-right">
-                                <p className="text-xs text-slate-500">Total</p>
-                            </div>
-                        </div>
-                        <div className="mb-2">
-                            <p className="text-2xl font-bold text-slate-900">{metrics.totalCandidates}</p>
-                        </div>
-                        <p className="text-sm font-medium text-slate-600">Candidates</p>
-                        <div className="mt-3 flex items-center text-xs text-slate-500">
-                            <span>Click to view</span>
-                            <svg className="w-3 h-3 ml-1 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                             </svg>
                         </div>
@@ -201,7 +167,7 @@ const Dashboard: React.FC = () => {
                         <p className="text-sm font-medium text-slate-600">Jobs</p>
                         <div className="mt-3 flex items-center text-xs text-slate-500">
                             <span>Click to view</span>
-                            <svg className="w-3 h-3 ml-1 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                             </svg>
                         </div>
@@ -225,7 +191,7 @@ const Dashboard: React.FC = () => {
                         <p className="text-sm font-medium text-slate-600">Placements</p>
                         <div className="mt-3 flex items-center text-xs text-slate-500">
                             <span>Click to view</span>
-                            <svg className="w-3 h-3 ml-1 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                             </svg>
                         </div>
@@ -249,7 +215,7 @@ const Dashboard: React.FC = () => {
                         <p className="text-sm font-medium text-slate-600">Revenue</p>
                         <div className="mt-3 flex items-center text-xs text-slate-500">
                             <span>Click to view</span>
-                            <svg className="w-3 h-3 ml-1 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                             </svg>
                         </div>
