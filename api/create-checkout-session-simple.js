@@ -65,7 +65,6 @@ module.exports = async function handler(req, res) {
             mode: 'subscription',
             success_url: successUrl || 'https://www.pebblecrm.app/dashboard',
             cancel_url: cancelUrl || 'https://www.pebblecrm.app/upgrade',
-            trial_period_days: 7,
             metadata: {
                 firebaseUserId: userId,
                 userEmail: userEmail
