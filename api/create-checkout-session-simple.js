@@ -58,7 +58,7 @@ module.exports = async function handler(req, res) {
             payment_method_types: ['card'],
             line_items: [
                 {
-                    price: process.env.STRIPE_PRICE_ID || 'price_1RxmEvJp0yoFovcO59Esb7f5',
+                    price: process.env.STRIPE_PRICE_ID || 'price_1RxSYvJp0yoFovcOpODFoD46',
                     quantity: 1,
                 },
             ],
