@@ -7,29 +7,48 @@ if (!admin.apps.length) {
 
     // Convert the private key from \n format to actual newlines
     let privateKey = process.env.FIREBASE_PRIVATE_KEY;
-
-    // Remove any surrounding quotes
+    
+    console.log('=== PRIVATE KEY DEBUG START ===');
+    console.log('Original private key length:', privateKey.length);
+    console.log('Original private key starts with:', privateKey.substring(0, 100));
+    console.log('Original private key ends with:', privateKey.substring(privateKey.length - 100));
+    
+    // Remove any surrounding quotes (single or double)
     privateKey = privateKey.replace(/^["']|["']$/g, '');
-
-    // Convert \n to actual newlines
-    privateKey = privateKey.replace(/\\n/g, '\n');
-
-    // Remove any extra whitespace
+    
+    // Remove any invisible Unicode characters
+    privateKey = privateKey.replace(/[\u200B-\u200D\uFEFF]/g, '');
+    
+    // Convert various line ending formats to actual newlines
+    privateKey = privateKey.replace(/\\r\\n/g, '\n');  // Windows line endings
+    privateKey = privateKey.replace(/\\n/g, '\n');     // Unix line endings
+    privateKey = privateKey.replace(/\\r/g, '\n');     // Old Mac line endings
+    
+    // Remove any extra whitespace and normalize
     privateKey = privateKey.trim();
-
-    // Validate the key format
+    
+    // Ensure proper PEM format
     if (!privateKey.startsWith('-----BEGIN PRIVATE KEY-----')) {
         throw new Error('Invalid private key format: missing BEGIN marker');
     }
     if (!privateKey.endsWith('-----END PRIVATE KEY-----')) {
         throw new Error('Invalid private key format: missing END marker');
     }
-
-    console.log('Private key length:', privateKey.length);
-    console.log('Private key starts with:', privateKey.substring(0, 50));
-    console.log('Private key ends with:', privateKey.substring(privateKey.length - 50));
+    
+    // Count the lines to ensure proper PEM structure
+    const lines = privateKey.split('\n');
+    if (lines.length < 3) {
+        throw new Error('Invalid private key format: insufficient lines');
+    }
+    
+    console.log('=== PRIVATE KEY DEBUG END ===');
+    console.log('Processed private key length:', privateKey.length);
+    console.log('Processed private key starts with:', privateKey.substring(0, 100));
+    console.log('Processed private key ends with:', privateKey.substring(privateKey.length - 100));
     console.log('Private key contains newlines:', privateKey.includes('\n'));
-    console.log('Private key line count:', privateKey.split('\n').length);
+    console.log('Private key line count:', lines.length);
+    console.log('First line:', lines[0]);
+    console.log('Last line:', lines[lines.length - 1]);
 
     admin.initializeApp({
         credential: admin.credential.cert({
