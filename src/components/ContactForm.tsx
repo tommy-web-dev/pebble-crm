@@ -7,9 +7,10 @@ interface ContactFormProps {
     onSubmit: (contact: Omit<Contact, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) => Promise<void>;
     onCancel: () => void;
     isOpen: boolean;
+    defaultContactType?: 'client' | 'candidate';
 }
 
-const ContactForm: React.FC<ContactFormProps> = ({ contact, onSubmit, onCancel, isOpen }) => {
+const ContactForm: React.FC<ContactFormProps> = ({ contact, onSubmit, onCancel, isOpen, defaultContactType = 'client' }) => {
     const { formatPhoneNumber } = useSettings();
 
     const [formData, setFormData] = useState({
@@ -19,6 +20,7 @@ const ContactForm: React.FC<ContactFormProps> = ({ contact, onSubmit, onCancel, 
         phone: '',
         company: '',
         position: '',
+        contactType: defaultContactType,
         notes: '',
         tags: [] as string[]
     });
@@ -37,6 +39,7 @@ const ContactForm: React.FC<ContactFormProps> = ({ contact, onSubmit, onCancel, 
                 phone: contact.phone || '',
                 company: contact.company || '',
                 position: contact.position || '',
+                contactType: contact.contactType || defaultContactType,
                 notes: contact.notes || '',
                 tags: [...contact.tags]
             });
@@ -49,6 +52,7 @@ const ContactForm: React.FC<ContactFormProps> = ({ contact, onSubmit, onCancel, 
                 phone: '',
                 company: '',
                 position: '',
+                contactType: defaultContactType,
                 notes: '',
                 tags: []
             });
@@ -95,6 +99,7 @@ const ContactForm: React.FC<ContactFormProps> = ({ contact, onSubmit, onCancel, 
                 phone: formData.phone.trim() || undefined,
                 company: formData.company.trim() || undefined,
                 position: formData.position.trim() || undefined,
+                contactType: formData.contactType,
                 notes: formData.notes.trim() || '',
                 tags: formData.tags
             };
@@ -265,6 +270,21 @@ const ContactForm: React.FC<ContactFormProps> = ({ contact, onSubmit, onCancel, 
                                 placeholder="Job title"
                             />
                         </div>
+                    </div>
+
+                    {/* Contact Type */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Contact Type
+                        </label>
+                        <select
+                            value={formData.contactType}
+                            onChange={(e) => setFormData(prev => ({ ...prev, contactType: e.target.value as 'client' | 'candidate' }))}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                        >
+                            <option value="client">Client</option>
+                            <option value="candidate">Candidate</option>
+                        </select>
                     </div>
 
                     {/* Tags */}

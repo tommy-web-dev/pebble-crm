@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { Contact } from '../types';
 import { getContacts, addContact, updateContact, deleteContact } from '../utils/firebase';
 import ContactForm from '../components/ContactForm';
-import ContactDetail from '../components/ContactDetail';
+import ClientDetail from '../components/ClientDetail';
 import ContactSkeleton from '../components/ContactSkeleton';
 
 const Contacts: React.FC = () => {
@@ -43,9 +43,12 @@ const Contacts: React.FC = () => {
         }
     }, [currentUser, setContacts]);
 
-    // Filter and sort contacts
+    // Filter and sort contacts - only show clients
     const filteredContacts = useMemo(() => {
         let filtered = contacts.filter(contact => {
+            // Only show clients, not candidates
+            if (contact.contactType !== 'client') return false;
+
             const matchesSearch = searchTerm === '' ||
                 contact.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 contact.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -209,7 +212,7 @@ const Contacts: React.FC = () => {
                             <svg className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                             </svg>
-                            Add Contact
+                            Add Client
                         </button>
                     </div>
                 </div>
@@ -366,9 +369,9 @@ const Contacts: React.FC = () => {
                 ) : (
                     <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-12 text-center">
                         <div className="text-6xl mb-4">👥</div>
-                        <h3 className="text-2xl font-bold text-slate-900 mb-3">No Contacts Found</h3>
+                        <h3 className="text-2xl font-bold text-slate-900 mb-3">No Clients Found</h3>
                         <p className="text-slate-600 mb-6 text-lg">
-                            {searchTerm || selectedTag ? 'Try adjusting your search or filters.' : 'Start building your contact list by adding your first contact.'}
+                            {searchTerm || selectedTag ? 'Try adjusting your search or filters.' : 'Start building your client list by adding your first client.'}
                         </p>
                         {!searchTerm && !selectedTag && (
                             <button
@@ -378,7 +381,7 @@ const Contacts: React.FC = () => {
                                 <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                                 </svg>
-                                Add Your First Contact
+                                Add Your First Client
                             </button>
                         )}
                     </div>
@@ -391,11 +394,12 @@ const Contacts: React.FC = () => {
                     onSubmit={selectedContact ? handleUpdateContact : handleAddContact}
                     onCancel={handleFormCancel}
                     isOpen={isFormOpen}
+                    defaultContactType="client"
                 />
 
                 {/* Contact Detail Modal */}
                 {selectedContact && isDetailOpen && (
-                    <ContactDetail
+                    <ClientDetail
                         contact={selectedContact}
                         onClose={() => setIsDetailOpen(false)}
                         onEdit={() => {

@@ -33,6 +33,7 @@ export interface Contact {
     phone?: string;
     company?: string;
     position?: string;
+    contactType?: 'client' | 'candidate'; // Optional for backward compatibility
     tags: string[];
     notes: string;
     createdAt: Date;
@@ -44,6 +45,7 @@ export interface Deal {
     id: string;
     userId: string;
     contactId: string;
+    clientId?: string; // Link to the client company (optional for backward compatibility)
     title: string;
     value: number;
     stage: 'lead' | 'negotiating' | 'live-opportunity' | 'closed-won' | 'closed-lost';
