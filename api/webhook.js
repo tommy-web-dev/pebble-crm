@@ -6,10 +6,24 @@ if (!admin.apps.length) {
     console.log('Initializing Firebase Admin in webhook...');
 
     // Convert the private key from \n format to actual newlines
-    const privateKey = process.env.FIREBASE_PRIVATE_KEY
-        .replace(/\\n/g, '\n')  // Convert \n to actual newlines
-        .replace(/"/g, '')      // Remove any quotes
-        .trim();                // Remove leading/trailing spaces
+    let privateKey = process.env.FIREBASE_PRIVATE_KEY;
+
+    // Remove any surrounding quotes
+    privateKey = privateKey.replace(/^["']|["']$/g, '');
+
+    // Convert \n to actual newlines
+    privateKey = privateKey.replace(/\\n/g, '\n');
+
+    // Remove any extra whitespace
+    privateKey = privateKey.trim();
+
+    // Validate the key format
+    if (!privateKey.startsWith('-----BEGIN PRIVATE KEY-----')) {
+        throw new Error('Invalid private key format: missing BEGIN marker');
+    }
+    if (!privateKey.endsWith('-----END PRIVATE KEY-----')) {
+        throw new Error('Invalid private key format: missing END marker');
+    }
 
     admin.initializeApp({
         credential: admin.credential.cert({

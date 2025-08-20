@@ -6,14 +6,30 @@ if (!admin.apps.length) {
     console.log('Initializing Firebase Admin...');
 
     // Convert the private key from \n format to actual newlines
-    const privateKey = process.env.FIREBASE_PRIVATE_KEY
-        .replace(/\\n/g, '\n')  // Convert \n to actual newlines
-        .replace(/"/g, '')      // Remove any quotes
-        .trim();                // Remove leading/trailing spaces
+    let privateKey = process.env.FIREBASE_PRIVATE_KEY;
+
+    // Remove any surrounding quotes
+    privateKey = privateKey.replace(/^["']|["']$/g, '');
+
+    // Convert \n to actual newlines
+    privateKey = privateKey.replace(/\\n/g, '\n');
+
+    // Remove any extra whitespace
+    privateKey = privateKey.trim();
+
+    // Validate the key format
+    if (!privateKey.startsWith('-----BEGIN PRIVATE KEY-----')) {
+        throw new Error('Invalid private key format: missing BEGIN marker');
+    }
+    if (!privateKey.endsWith('-----END PRIVATE KEY-----')) {
+        throw new Error('Invalid private key format: missing END marker');
+    }
 
     console.log('Private key length:', privateKey.length);
     console.log('Private key starts with:', privateKey.substring(0, 50));
     console.log('Private key ends with:', privateKey.substring(privateKey.length - 50));
+    console.log('Private key contains newlines:', privateKey.includes('\n'));
+    console.log('Private key line count:', privateKey.split('\n').length);
 
     admin.initializeApp({
         credential: admin.credential.cert({
