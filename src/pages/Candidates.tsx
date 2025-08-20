@@ -297,10 +297,10 @@ const Candidates: React.FC = () => {
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${candidate.tags && candidate.tags.includes('placed')
-                                                        ? 'bg-green-100 text-green-800'
-                                                        : candidate.tags && candidate.tags.includes('interviewing')
-                                                            ? 'bg-purple-100 text-purple-800'
-                                                            : 'bg-blue-100 text-blue-800'
+                                                    ? 'bg-green-100 text-green-800'
+                                                    : candidate.tags && candidate.tags.includes('interviewing')
+                                                        ? 'bg-purple-100 text-purple-800'
+                                                        : 'bg-blue-100 text-blue-800'
                                                     }`}>
                                                     {candidate.tags && candidate.tags.includes('placed') ? 'Placed' :
                                                         candidate.tags && candidate.tags.includes('interviewing') ? 'Interviewing' : 'Active'}
@@ -406,14 +406,23 @@ const Candidates: React.FC = () => {
                 />
 
                 {/* Contact Detail Modal */}
-                <ContactDetail
-                    contact={selectedContact}
-                    isOpen={isDetailOpen}
-                    onClose={() => {
-                        setIsDetailOpen(false);
-                        setSelectedContact(null);
-                    }}
-                />
+                {selectedContact && isDetailOpen && (
+                    <ContactDetail
+                        contact={selectedContact}
+                        onEdit={() => {
+                            setIsDetailOpen(false);
+                            setIsContactFormOpen(true);
+                        }}
+                        onDelete={() => {
+                            setIsDetailOpen(false);
+                            // Handle delete logic here if needed
+                        }}
+                        onClose={() => {
+                            setIsDetailOpen(false);
+                            setSelectedContact(null);
+                        }}
+                    />
+                )}
             </div>
         </div>
     );
