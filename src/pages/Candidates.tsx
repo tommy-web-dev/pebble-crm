@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useAppStore } from '../contexts/AppContext';
 import { Contact, Task } from '../types';
+import { addContact, updateContact } from '../utils/firebase';
 import ContactForm from '../components/ContactForm';
 import ContactDetail from '../components/ContactDetail';
 
@@ -25,9 +26,9 @@ const Candidates: React.FC = () => {
     // Summary metrics for candidates
     const summaryMetrics = useMemo(() => {
         const total = candidates.length;
-        const active = candidates.filter(c => c.tags.includes('active')).length;
-        const placed = candidates.filter(c => c.tags.includes('placed')).length;
-        const interviewing = candidates.filter(c => c.tags.includes('interviewing')).length;
+        const active = candidates.filter(c => c.tags && c.tags.includes('active')).length;
+        const placed = candidates.filter(c => c.tags && c.tags.includes('placed')).length;
+        const interviewing = candidates.filter(c => c.tags && c.tags.includes('interviewing')).length;
 
         return { total, active, placed, interviewing };
     }, [candidates]);
@@ -50,13 +51,13 @@ const Candidates: React.FC = () => {
         if (selectedStatus !== 'all') {
             switch (selectedStatus) {
                 case 'active':
-                    filtered = filtered.filter(c => c.tags.includes('active'));
+                    filtered = filtered.filter(c => c.tags && c.tags.includes('active'));
                     break;
                 case 'placed':
-                    filtered = filtered.filter(c => c.tags.includes('placed'));
+                    filtered = filtered.filter(c => c.tags && c.tags.includes('placed'));
                     break;
                 case 'interviewing':
-                    filtered = filtered.filter(c => c.tags.includes('interviewing'));
+                    filtered = filtered.filter(c => c.tags && c.tags.includes('interviewing'));
                     break;
             }
         }
@@ -295,14 +296,14 @@ const Candidates: React.FC = () => {
                                                 {candidate.position || 'N/A'}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${candidate.tags.includes('placed')
+                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${candidate.tags && candidate.tags.includes('placed')
                                                         ? 'bg-green-100 text-green-800'
-                                                        : candidate.tags.includes('interviewing')
+                                                        : candidate.tags && candidate.tags.includes('interviewing')
                                                             ? 'bg-purple-100 text-purple-800'
                                                             : 'bg-blue-100 text-blue-800'
                                                     }`}>
-                                                    {candidate.tags.includes('placed') ? 'Placed' :
-                                                        candidate.tags.includes('interviewing') ? 'Interviewing' : 'Active'}
+                                                    {candidate.tags && candidate.tags.includes('placed') ? 'Placed' :
+                                                        candidate.tags && candidate.tags.includes('interviewing') ? 'Interviewing' : 'Active'}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
@@ -378,11 +379,26 @@ const Candidates: React.FC = () => {
                 {/* Contact Form Modal */}
                 <ContactForm
                     contact={selectedContact}
-                    onSubmit={() => {
-                        setIsContactFormOpen(false);
-                        setSelectedContact(null);
+                    onSubmit={async (contactData) => {
+                        try {
+                            if (selectedContact) {
+                                // Update existing candidate
+                                await updateContact(selectedContact.id, contactData);
+                            } else {
+                                // Add new candidate
+                                await addContact({
+                                    ...contactData,
+                                    userId: currentUser!.uid
+                                });
+                            }
+                            setIsContactFormOpen(false);
+                            setSelectedContact(null);
+                        } catch (error) {
+                            console.error('Error saving candidate:', error);
+                            alert('Failed to save candidate. Please try again.');
+                        }
                     }}
-                    onClose={() => {
+                    onCancel={() => {
                         setIsContactFormOpen(false);
                         setSelectedContact(null);
                     }}
