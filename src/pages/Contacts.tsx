@@ -46,8 +46,8 @@ const Contacts: React.FC = () => {
     // Filter and sort contacts - only show clients
     const filteredContacts = useMemo(() => {
         let filtered = contacts.filter(contact => {
-            // Only show clients, not candidates
-            if (contact.contactType !== 'client') return false;
+            // Show clients and existing contacts without contactType (treat as clients for backward compatibility)
+            if (contact.contactType && contact.contactType !== 'client') return false;
 
             const matchesSearch = searchTerm === '' ||
                 contact.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -115,11 +115,19 @@ const Contacts: React.FC = () => {
 
         try {
             setLoading(true);
-            // Add to Firebase only - DataLoader will automatically update the store
-            await addContact({
+            console.log('Adding contact with data:', contactData); // Debug log
+
+            // Ensure contactType is set to 'client' for this page
+            const clientData = {
                 ...contactData,
+                contactType: 'client' as const,
                 userId: currentUser.uid
-            });
+            };
+
+            console.log('Final client data:', clientData); // Debug log
+
+            // Add to Firebase only - DataLoader will automatically update the store
+            await addContact(clientData);
 
             setIsFormOpen(false);
         } catch (error: any) {

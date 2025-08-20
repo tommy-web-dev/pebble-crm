@@ -139,8 +139,9 @@ const ContactForm: React.FC<ContactFormProps> = ({ contact, onSubmit, onCancel, 
     if (!isOpen) return null;
 
     const isEditMode = !!contact;
-    const title = isEditMode ? 'Edit Contact' : 'Add New Contact';
-    const submitText = isEditMode ? 'Update Contact' : 'Add Contact';
+    const isClient = formData.contactType === 'client';
+    const title = isEditMode ? `Edit ${isClient ? 'Client' : 'Candidate'}` : `Add New ${isClient ? 'Client' : 'Candidate'}`;
+    const submitText = isEditMode ? `Update ${isClient ? 'Client' : 'Candidate'}` : `Add ${isClient ? 'Client' : 'Candidate'}`;
 
     return (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-[60]">
