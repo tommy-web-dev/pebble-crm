@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { redirectToStripeCheckout } from '../utils/stripeCheckout';
 import { getSubscriptionStatus } from '../utils/stripe';
 import { UserSubscription } from '../types';
 
@@ -37,8 +36,8 @@ const Landing: React.FC = () => {
             // User already has subscription, redirect to dashboard
             navigate('/dashboard');
         } else if (currentUser) {
-            // User is logged in but no subscription, go to upgrade page
-            navigate('/upgrade');
+            // User is logged in but no subscription, go directly to Stripe Payment Link
+            window.location.href = 'https://buy.stripe.com/3cI7sM6A6gho26VgUefjG00';
         } else {
             // User not logged in, go to signup page
             navigate('/signup');
@@ -188,18 +187,6 @@ const Landing: React.FC = () => {
             answer: "We offer email support for all users via our Support email - support@pebblecrm.app. We aim to respond within 48 hours."
         }
     ];
-
-    const handleCheckout = async (interval: 'monthly' | 'yearly') => {
-        try {
-            console.log('Starting Stripe checkout...', { interval });
-            const result = await redirectToStripeCheckout({ interval });
-            console.log('Checkout result:', result);
-        } catch (error) {
-            console.error('Checkout error:', error);
-            // Fallback to login page
-            navigate('/login');
-        }
-    };
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30">

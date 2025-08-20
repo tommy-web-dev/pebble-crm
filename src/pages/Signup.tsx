@@ -74,19 +74,18 @@ const Signup: React.FC = () => {
             // Wait a moment for Firebase auth to complete, then redirect
             setTimeout(async () => {
                 try {
-                    console.log('Attempting Stripe checkout redirect...');
-                    console.log('Current user state:', { email: formData.email });
+                    console.log('Account created successfully! Redirecting to Stripe Payment Link...');
 
-                    // Try to redirect to Stripe checkout
-                    await redirectToStripeCheckout({ interval: 'monthly' });
+                    // Go directly to Stripe Payment Link
+                    window.location.href = 'https://buy.stripe.com/3cI7sM6A6gho26VgUefjG00';
 
                     // Clear timeout if redirect succeeds
                     clearTimeout(redirectTimeout);
-                } catch (stripeError) {
-                    console.error('Stripe redirect error:', stripeError);
+                } catch (error) {
+                    console.error('Redirect error:', error);
                     // Clear timeout
                     clearTimeout(redirectTimeout);
-                    // If Stripe redirect fails, redirect to upgrade page as fallback
+                    // If redirect fails, redirect to upgrade page as fallback
                     setError('Redirecting to upgrade page...');
                     setTimeout(() => {
                         navigate('/upgrade');
