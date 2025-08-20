@@ -27,7 +27,7 @@ const Dashboard: React.FC = () => {
         const loadSubscription = async () => {
             if (currentUser) {
                 try {
-                    const sub = await getSubscriptionStatus(currentUser.uid);
+                    const sub = await getSubscriptionStatus(currentUser!.uid);
                     setSubscription(sub);
                 } catch (error) {
                     console.error('Error loading subscription:', error);

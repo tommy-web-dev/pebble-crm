@@ -21,6 +21,8 @@ const Landing: React.FC = () => {
     }, [currentUser]);
 
     const checkSubscription = async () => {
+        if (!currentUser) return;
+
         setCheckingSubscription(true);
         try {
             const sub = await getSubscriptionStatus(currentUser.uid);
