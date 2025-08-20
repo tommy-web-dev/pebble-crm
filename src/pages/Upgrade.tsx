@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { redirectToStripeCheckout } from '../utils/stripeCheckout';
 import { doc, setDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 
@@ -9,7 +8,8 @@ const Upgrade: React.FC = () => {
     const { currentUser } = useAuth();
 
     const handleStartTrial = () => {
-        redirectToStripeCheckout({ interval: 'monthly' });
+        // Go directly to Stripe Payment Link
+        window.location.href = 'https://buy.stripe.com/3cI7sM6A6gho26VgUefjG00';
     };
 
     const handleCreateUserDocument = async () => {
@@ -27,9 +27,9 @@ const Upgrade: React.FC = () => {
             });
 
             alert('User document created! Now redirecting to payment...');
-            // Redirect to Stripe checkout
+            // Redirect to Stripe Payment Link
             setTimeout(() => {
-                redirectToStripeCheckout({ interval: 'monthly' });
+                window.location.href = 'https://buy.stripe.com/3cI7sM6A6gho26VgUefjG00';
             }, 1000);
         } catch (error) {
             console.error('Error creating user document:', error);
