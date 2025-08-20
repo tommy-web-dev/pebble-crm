@@ -51,9 +51,12 @@ const Tasks: React.FC = () => {
         }
     }, [currentUser]);
 
-    const getContactName = (contactId: string): string => {
-        const contact = contacts.find(c => c.id === contactId);
-        return contact ? `${contact.firstName} ${contact.lastName}` : 'Unknown Contact';
+    const getContactName = (task: Task): string => {
+        if (task.relatedTo && task.relatedTo.type === 'contact') {
+            const contact = contacts.find(c => c.id === task.relatedTo!.id);
+            return contact ? `${contact.firstName} ${contact.lastName}` : 'Unknown Contact';
+        }
+        return 'No Contact';
     };
 
     // Calculate summary metrics
@@ -87,7 +90,7 @@ const Tasks: React.FC = () => {
             filtered = filtered.filter(task =>
                 task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 (task.description && task.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
-                getContactName(task.contactId).toLowerCase().includes(searchTerm.toLowerCase())
+                getContactName(task).toLowerCase().includes(searchTerm.toLowerCase())
             );
         }
 
@@ -125,8 +128,8 @@ const Tasks: React.FC = () => {
                     bValue = priorityOrder[b.priority as keyof typeof priorityOrder] || 0;
                     break;
                 case 'contact':
-                    aValue = getContactName(a.contactId).toLowerCase();
-                    bValue = getContactName(b.contactId).toLowerCase();
+                    aValue = getContactName(a).toLowerCase();
+                    bValue = getContactName(b).toLowerCase();
                     break;
                 case 'createdAt':
                     aValue = a.createdAt ? new Date(a.createdAt).getTime() : 0;
@@ -424,7 +427,7 @@ const Tasks: React.FC = () => {
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
-                                                    {getContactName(task.contactId)}
+                                                    {getContactName(task)}
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
                                                     {task.dueDate ? formatDate(task.dueDate) : 'No due date'}

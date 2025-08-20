@@ -12,34 +12,42 @@ const Landing: React.FC = () => {
 
     // Check subscription status when user is logged in
     useEffect(() => {
-        const checkSubscription = async () => {
-            if (currentUser) {
-                setCheckingSubscription(true);
-                try {
-                    const sub = await getSubscriptionStatus(currentUser.uid);
-                    setSubscription(sub);
-                } catch (error) {
-                    console.error('Error checking subscription:', error);
-                    setSubscription(null); // Ensure subscription is set to null on error
-                } finally {
-                    setCheckingSubscription(false);
-                }
-            }
-        };
-
-        checkSubscription();
+        if (currentUser) {
+            console.log('Current user detected:', currentUser.email);
+            checkSubscription();
+        } else {
+            console.log('No current user');
+        }
     }, [currentUser]);
+
+    const checkSubscription = async () => {
+        setCheckingSubscription(true);
+        try {
+            const sub = await getSubscriptionStatus(currentUser.uid);
+            setSubscription(sub);
+        } catch (error) {
+            console.error('Error checking subscription:', error);
+            setSubscription(null); // Ensure subscription is set to null on error
+        } finally {
+            setCheckingSubscription(false);
+        }
+    };
 
     // Smart "Start Free Trial" handler
     const handleStartFreeTrial = () => {
+        console.log('handleStartFreeTrial called', { currentUser, subscription });
+
         if (currentUser && subscription && ['active', 'trialing'].includes(subscription.status)) {
             // User already has subscription, redirect to dashboard
+            console.log('User has subscription, redirecting to dashboard');
             navigate('/dashboard');
         } else if (currentUser) {
             // User is logged in but no subscription, go directly to Stripe Payment Link
+            console.log('User logged in but no subscription, going to Stripe Payment Link');
             window.location.href = 'https://buy.stripe.com/3cI7sM6A6gho26VgUefjG00';
         } else {
             // User not logged in, go to signup page
+            console.log('User not logged in, going to signup page');
             navigate('/signup');
         }
     };
