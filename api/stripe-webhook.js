@@ -1,11 +1,24 @@
-import Stripe from 'stripe';
-import { db } from '../../config/firebase';
-import { doc, updateDoc, setDoc } from 'firebase/firestore';
+const Stripe = require('stripe');
+const admin = require('firebase-admin');
+
+// Initialize Firebase Admin if not already initialized
+if (!admin.apps.length) {
+    admin.initializeApp({
+        credential: admin.credential.cert({
+            projectId: process.env.FIREBASE_PROJECT_ID,
+            clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+            privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+        }),
+        databaseURL: process.env.FIREBASE_DATABASE_URL,
+    });
+}
+
+const db = admin.firestore();
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
     if (req.method !== 'POST') {
         return res.status(405).json({ message: 'Method not allowed' });
     }
@@ -26,27 +39,27 @@ export default async function handler(req, res) {
             case 'checkout.session.completed':
                 await handleCheckoutSessionCompleted(event.data.object);
                 break;
-            
+
             case 'customer.subscription.created':
                 await handleSubscriptionCreated(event.data.object);
                 break;
-            
+
             case 'customer.subscription.updated':
                 await handleSubscriptionUpdated(event.data.object);
                 break;
-            
+
             case 'customer.subscription.deleted':
                 await handleSubscriptionDeleted(event.data.object);
                 break;
-            
+
             case 'invoice.payment_succeeded':
                 await handleInvoicePaymentSucceeded(event.data.object);
                 break;
-            
+
             case 'invoice.payment_failed':
                 await handleInvoicePaymentFailed(event.data.object);
                 break;
-            
+
             default:
                 console.log(`Unhandled event type: ${event.type}`);
         }
@@ -60,17 +73,17 @@ export default async function handler(req, res) {
 
 async function handleCheckoutSessionCompleted(session) {
     console.log('Checkout session completed:', session.id);
-    
+
     try {
         // Get customer details
         const customer = await stripe.customers.retrieve(session.customer);
         const subscription = await stripe.subscriptions.retrieve(session.subscription);
-        
+
         // Update user subscription in Firestore
         if (customer.metadata.userId) {
-            const userRef = doc(db, 'users', customer.metadata.userId);
-            
-            await updateDoc(userRef, {
+            const userRef = db.collection('users').doc(customer.metadata.userId);
+
+            await userRef.update({
                 stripeCustomerId: customer.id,
                 stripeSubscriptionId: subscription.id,
                 subscriptionStatus: subscription.status,
@@ -79,7 +92,7 @@ async function handleCheckoutSessionCompleted(session) {
                 currentPeriodEnd: subscription.current_period_end ? new Date(subscription.current_period_end * 1000) : null,
                 updatedAt: new Date()
             });
-            
+
             console.log(`Updated user ${customer.metadata.userId} subscription status to ${subscription.status}`);
         }
     } catch (error) {
@@ -89,14 +102,14 @@ async function handleCheckoutSessionCompleted(session) {
 
 async function handleSubscriptionCreated(subscription) {
     console.log('Subscription created:', subscription.id);
-    
+
     try {
         const customer = await stripe.customers.retrieve(subscription.customer);
-        
+
         if (customer.metadata.userId) {
-            const userRef = doc(db, 'users', customer.metadata.userId);
-            
-            await updateDoc(userRef, {
+            const userRef = db.collection('users').doc(customer.metadata.userId);
+
+            await userRef.update({
                 stripeCustomerId: customer.id,
                 stripeSubscriptionId: subscription.id,
                 subscriptionStatus: subscription.status,
@@ -113,14 +126,14 @@ async function handleSubscriptionCreated(subscription) {
 
 async function handleSubscriptionUpdated(subscription) {
     console.log('Subscription updated:', subscription.id);
-    
+
     try {
         const customer = await stripe.customers.retrieve(subscription.customer);
-        
+
         if (customer.metadata.userId) {
-            const userRef = doc(db, 'users', customer.metadata.userId);
-            
-            await updateDoc(userRef, {
+            const userRef = db.collection('users').doc(customer.metadata.userId);
+
+            await userRef.update({
                 subscriptionStatus: subscription.status,
                 trialEnd: subscription.trial_end ? new Date(subscription.trial_end * 1000) : null,
                 currentPeriodEnd: subscription.current_period_end ? new Date(subscription.current_period_end * 1000) : null,
@@ -134,14 +147,14 @@ async function handleSubscriptionUpdated(subscription) {
 
 async function handleSubscriptionDeleted(subscription) {
     console.log('Subscription deleted:', subscription.id);
-    
+
     try {
         const customer = await stripe.customers.retrieve(subscription.customer);
-        
+
         if (customer.metadata.userId) {
-            const userRef = doc(db, 'users', customer.metadata.userId);
-            
-            await updateDoc(userRef, {
+            const userRef = db.collection('users').doc(customer.metadata.userId);
+
+            await userRef.update({
                 subscriptionStatus: 'canceled',
                 updatedAt: new Date()
             });
@@ -153,14 +166,14 @@ async function handleSubscriptionDeleted(subscription) {
 
 async function handleInvoicePaymentSucceeded(invoice) {
     console.log('Invoice payment succeeded:', invoice.id);
-    
+
     try {
         const customer = await stripe.customers.retrieve(invoice.customer);
-        
+
         if (customer.metadata.userId) {
-            const userRef = doc(db, 'users', customer.metadata.userId);
-            
-            await updateDoc(userRef, {
+            const userRef = db.collection('users').doc(customer.metadata.userId);
+
+            await userRef.update({
                 subscriptionStatus: 'active',
                 updatedAt: new Date()
             });
@@ -172,14 +185,14 @@ async function handleInvoicePaymentSucceeded(invoice) {
 
 async function handleInvoicePaymentFailed(invoice) {
     console.log('Invoice payment failed:', invoice.id);
-    
+
     try {
         const customer = await stripe.customers.retrieve(invoice.customer);
-        
+
         if (customer.metadata.userId) {
-            const userRef = doc(db, 'users', customer.metadata.userId);
-            
-            await updateDoc(userRef, {
+            const userRef = db.collection('users').doc(customer.metadata.userId);
+
+            await userRef.update({
                 subscriptionStatus: 'past_due',
                 updatedAt: new Date()
             });
