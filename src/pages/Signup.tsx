@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { checkExistingSubscription } from '../utils/stripe';
-import { sendWelcomeEmail } from '../utils/emailService';
+
 
 const Signup: React.FC = () => {
     const { signup } = useAuth();
