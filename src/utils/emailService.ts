@@ -34,7 +34,7 @@ export const sendWelcomeEmail = async (data: WelcomeEmailData) => {
                         .header { 
                             text-align: center; 
                             padding: 30px 0; 
-                            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
                             color: white; 
                             border-radius: 10px; 
                             margin-bottom: 30px;
@@ -47,7 +47,7 @@ export const sendWelcomeEmail = async (data: WelcomeEmailData) => {
                         .button { 
                             display: inline-block; 
                             padding: 15px 30px; 
-                            background: #667eea; 
+                            background: #3b82f6; 
                             color: white; 
                             text-decoration: none; 
                             border-radius: 8px; 
@@ -66,7 +66,14 @@ export const sendWelcomeEmail = async (data: WelcomeEmailData) => {
                 </head>
                 <body>
                     <div class="header">
-                        <div class="logo">P</div>
+                        <div class="logo">
+                            <div style="display: inline-flex; align-items: center; background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); padding: 12px 16px; border-radius: 12px; margin-right: 16px;">
+                                <span style="color: white; font-size: 24px; font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">P</span>
+                            </div>
+                            <span style="font-size: 28px; font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+                                <span style="color: #374151;">Peb</span><span style="color: #3b82f6;">ble</span>
+                            </span>
+                        </div>
                         <h1>Welcome to Pebble CRM!</h1>
                         <p>Your recruitment business is about to get a whole lot easier</p>
                     </div>
@@ -149,7 +156,7 @@ export const sendPaymentSuccessEmail = async (data: WelcomeEmailData) => {
                         .header { 
                             text-align: center; 
                             padding: 30px 0; 
-                            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
                             color: white; 
                             border-radius: 10px; 
                             margin-bottom: 30px;
@@ -161,7 +168,7 @@ export const sendPaymentSuccessEmail = async (data: WelcomeEmailData) => {
                         .button { 
                             display: inline-block; 
                             padding: 15px 30px; 
-                            background: #10b981; 
+                            background: #3b82f6; 
                             color: white; 
                             text-decoration: none; 
                             border-radius: 8px; 
@@ -180,6 +187,14 @@ export const sendPaymentSuccessEmail = async (data: WelcomeEmailData) => {
                 </head>
                 <body>
                     <div class="header">
+                        <div class="logo">
+                            <div style="display: inline-flex; align-items: center; background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); padding: 12px 16px; border-radius: 12px; margin-right: 16px;">
+                                <span style="color: white; font-size: 24px; font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">P</span>
+                            </div>
+                            <span style="font-size: 28px; font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+                                <span style="color: #374151;">Peb</span><span style="color: #3b82f6;">ble</span>
+                            </span>
+                        </div>
                         <div class="success-icon">✅</div>
                         <h1>Payment Successful!</h1>
                         <p>Your Pebble CRM subscription is now active</p>
