@@ -44,12 +44,12 @@ const Landing: React.FC = () => {
             console.log('User has subscription, redirecting to dashboard');
             navigate('/dashboard');
         } else if (currentUser) {
-                            // User is logged in but no subscription, redirect to Stripe
-                console.log('User logged in but no subscription, redirecting to Stripe');
-                
-                // Redirect to Stripe checkout with user metadata
-                const stripeUrl = `https://buy.stripe.com/28E9AUcYu3uC8vjavQfjG01?prefilled_email=${encodeURIComponent(currentUser.email || '')}&client_reference_id=${currentUser.uid}`;
-                window.location.href = stripeUrl;
+            // User is logged in but no subscription, redirect to Stripe
+            console.log('User logged in but no subscription, redirecting to Stripe');
+
+            // Redirect to Stripe checkout with user metadata
+            const stripeUrl = `https://buy.stripe.com/28E9AUcYu3uC8vjavQfjG01?prefilled_email=${encodeURIComponent(currentUser.email || '')}&client_reference_id=${currentUser.uid}`;
+            window.location.href = stripeUrl;
         } else {
             // User not logged in, go to signup page
             console.log('User not logged in, going to signup page');

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { checkExistingSubscription } from '../utils/stripe';
+import { sendWelcomeEmail } from '../utils/emailService';
 
 const Signup: React.FC = () => {
     const { signup } = useAuth();
@@ -61,6 +62,19 @@ const Signup: React.FC = () => {
 
             if (!userId) {
                 throw new Error('Failed to get user ID after signup');
+            }
+
+            // Send welcome email
+            try {
+                await sendWelcomeEmail({
+                    email: formData.email,
+                    displayName: formData.displayName,
+                    dashboardUrl: `${window.location.origin}/dashboard`
+                });
+                console.log('Welcome email sent successfully!');
+            } catch (emailError) {
+                console.error('Failed to send welcome email:', emailError);
+                // Don't fail signup if email fails
             }
 
             // Show success message and wait a moment for Firebase auth to complete
