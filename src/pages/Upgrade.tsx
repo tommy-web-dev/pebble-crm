@@ -5,31 +5,10 @@ import { useAuth } from '../contexts/AuthContext';
 const Upgrade: React.FC = () => {
     const { currentUser } = useAuth();
 
-    const handleStartTrial = async () => {
-        try {
-            // Create checkout session with user ID
-            const response = await fetch(`${window.location.origin}/api/create-checkout-session`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    userId: currentUser?.uid,
-                    email: currentUser?.email,
-                    displayName: currentUser?.displayName
-                }),
-            });
-
-            if (response.ok) {
-                const { url } = await response.json();
-                window.location.href = url;
-            } else {
-                throw new Error('Failed to create checkout session');
-            }
-        } catch (error) {
-            console.error('Checkout session error:', error);
-            alert('Failed to create checkout session. Please try again.');
-        }
+    const handleStartTrial = () => {
+        // Redirect directly to Stripe checkout
+        const stripeUrl = `https://buy.stripe.com/28E9AUcYu3uC8vjavQfjG01?prefilled_email=${encodeURIComponent(currentUser?.email || '')}&client_reference_id=${currentUser?.uid || ''}`;
+        window.location.href = stripeUrl;
     };
 
 

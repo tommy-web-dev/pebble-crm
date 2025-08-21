@@ -80,31 +80,16 @@ const Signup: React.FC = () => {
                 try {
                     console.log('Account created successfully! Creating Stripe checkout session...');
                     
-                    // Create checkout session with user ID
-                    const response = await fetch(`${window.location.origin}/api/create-checkout-session`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            userId: userId,
-                            email: formData.email,
-                            displayName: formData.displayName
-                        }),
-                    });
-
-                    if (response.ok) {
-                        const { url } = await response.json();
-                        console.log('Checkout session created, redirecting to Stripe...');
-                        
-                        // Redirect to Stripe checkout
-                        window.location.href = url;
-                        
-                        // Clear timeout if redirect succeeds
-                        clearTimeout(redirectTimeout);
-                    } else {
-                        throw new Error('Failed to create checkout session');
-                    }
+                    // For now, redirect directly to Stripe checkout
+                    // TODO: Implement proper checkout session creation
+                    console.log('Redirecting to Stripe checkout...');
+                    
+                    // Redirect to Stripe checkout with user metadata
+                    const stripeUrl = `https://buy.stripe.com/28E9AUcYu3uC8vjavQfjG01?prefilled_email=${encodeURIComponent(formData.email)}&client_reference_id=${userId}`;
+                    window.location.href = stripeUrl;
+                    
+                    // Clear timeout if redirect succeeds
+                    clearTimeout(redirectTimeout);
                 } catch (error) {
                     console.error('Checkout session error:', error);
                     // Clear timeout
