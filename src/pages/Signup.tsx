@@ -64,25 +64,14 @@ const Signup: React.FC = () => {
                 throw new Error('Failed to get user ID after signup');
             }
 
-            // Send welcome email
-            try {
-                console.log('Attempting to send welcome email...');
-                await sendWelcomeEmail({
-                    email: formData.email,
-                    displayName: formData.displayName,
-                    dashboardUrl: `${window.location.origin}/dashboard`
-                });
-                console.log('Welcome email sent successfully!');
-            } catch (emailError) {
-                console.error('Failed to send welcome email:', emailError);
-                // Don't fail signup if email fails
-            }
+            // Welcome email temporarily disabled - will add later
+            console.log('Welcome email feature coming soon!');
 
             // Show success message and wait a moment for Firebase auth to complete
             setError('');
             setLoading(false);
             setError('Account created! Setting up your free trial...');
-            
+
             // Add delay to see console messages
             console.log('Waiting 5 seconds before redirect...');
             await new Promise(resolve => setTimeout(resolve, 5000));
@@ -99,15 +88,15 @@ const Signup: React.FC = () => {
             setTimeout(async () => {
                 try {
                     console.log('Account created successfully! Creating Stripe checkout session...');
-                    
+
                     // For now, redirect directly to Stripe checkout
                     // TODO: Implement proper checkout session creation
                     console.log('Redirecting to Stripe checkout...');
-                    
+
                     // Redirect to Stripe checkout with user metadata
                     const stripeUrl = `https://buy.stripe.com/28E9AUcYu3uC8vjavQfjG01?prefilled_email=${encodeURIComponent(formData.email)}&client_reference_id=${userId}`;
                     window.location.href = stripeUrl;
-                    
+
                     // Clear timeout if redirect succeeds
                     clearTimeout(redirectTimeout);
                 } catch (error) {
