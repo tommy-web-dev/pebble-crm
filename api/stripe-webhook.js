@@ -1,5 +1,5 @@
-const Stripe = require('stripe');
-const admin = require('firebase-admin');
+import Stripe from 'stripe';
+import admin from 'firebase-admin';
 
 // Initialize Firebase Admin if not already initialized
 if (!admin.apps.length) {
@@ -18,7 +18,7 @@ const db = admin.firestore();
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
     if (req.method !== 'POST') {
         return res.status(405).json({ message: 'Method not allowed' });
     }
