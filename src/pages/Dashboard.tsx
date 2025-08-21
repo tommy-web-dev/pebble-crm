@@ -140,7 +140,7 @@ const Dashboard: React.FC = () => {
                     </button>
                 </div>
 
-                                    {/* Key Metrics Cards - Optimised for 4 cards */}
+                {/* Key Metrics Cards - Optimised for 4 cards */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     {/* Clients Card */}
                     <div className="group bg-white rounded-2xl shadow-lg border border-slate-200 p-5 hover:shadow-xl transition-all duration-300 transform hover:scale-105 cursor-pointer" onClick={() => navigate('/contacts')}>

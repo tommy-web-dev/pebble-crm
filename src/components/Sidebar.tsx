@@ -87,7 +87,11 @@ const Sidebar: React.FC = () => {
                 {/* Sidebar Header */}
                 <div className="flex items-center justify-between h-16 px-6 border-b border-slate-200/50 bg-gradient-to-r from-slate-50 to-blue-50/30">
                     <button 
-                        onClick={() => navigate('/')}
+                        onClick={() => {
+                            navigate('/');
+                            // Scroll to top when navigating to landing page
+                            window.scrollTo(0, 0);
+                        }}
                         className="flex items-center space-x-3 hover:opacity-80 transition-opacity duration-200 cursor-pointer"
                     >
                         <div className="w-8 h-8 bg-gradient-to-br from-slate-700 to-blue-600 rounded-lg flex items-center justify-center shadow-lg">

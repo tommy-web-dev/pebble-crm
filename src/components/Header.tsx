@@ -22,14 +22,21 @@ const Header: React.FC = () => {
 
                 {/* Center - Logo (mobile only) */}
                 <div className="flex items-center lg:hidden">
-                    <div className="flex items-center space-x-3">
+                    <button 
+                        onClick={() => {
+                            window.location.href = '/';
+                            // Scroll to top when navigating to landing page
+                            window.scrollTo(0, 0);
+                        }}
+                        className="flex items-center space-x-3 hover:opacity-80 transition-opacity duration-200 cursor-pointer"
+                    >
                         <div className="w-8 h-8 bg-gradient-to-br from-slate-700 to-blue-600 rounded-lg flex items-center justify-center shadow-lg">
                             <span className="text-white font-bold text-lg">P</span>
                         </div>
                         <span className="text-xl font-bold bg-gradient-to-r from-slate-700 to-blue-600 bg-clip-text text-transparent">
                             Pebble
                         </span>
-                    </div>
+                    </button>
                 </div>
 
                 {/* Right side - Empty for now, just keeping the layout balanced */}

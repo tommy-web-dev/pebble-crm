@@ -2,27 +2,6 @@
     "version": 2,
     "builds": [
         {
-            "src": "api/webhook.js",
-            "use": "@vercel/node"
-        },
-        {
-            "src": "api/create-checkout-session.js",
-            "use": "@vercel/node"
-        },
-        {
-            "src": "api/create-checkout-session-simple.js",
-            "use": "@vercel/node"
-        },
-        {
-            "src": "api/cancel-subscription.js",
-            "use": "@vercel/node"
-        },
-        {
-            "src": "api/get-subscription.js",
-            "use": "@vercel/node"
-        },
-
-        {
             "src": "package.json",
             "use": "@vercel/static-build",
             "config": {
@@ -31,27 +10,6 @@
         }
     ],
     "rewrites": [
-        {
-            "source": "/api/webhook",
-            "destination": "/api/webhook.js"
-        },
-        {
-            "source": "/api/create-checkout-session",
-            "destination": "/api/create-checkout-session.js"
-        },
-        {
-            "source": "/api/create-checkout-session-simple",
-            "destination": "/api/create-checkout-session-simple.js"
-        },
-        {
-            "source": "/api/cancel-subscription",
-            "destination": "/api/cancel-subscription.js"
-        },
-        {
-            "source": "/api/get-subscription",
-            "destination": "/api/get-subscription.js"
-        },
-
         {
             "source": "/(.*)",
             "destination": "/index.html"
