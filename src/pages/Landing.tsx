@@ -47,7 +47,7 @@ const Landing: React.FC = () => {
             // User is logged in but no subscription, create checkout session
             console.log('User logged in but no subscription, creating checkout session');
             try {
-                const response = await fetch('/api/create-checkout-session', {
+                const response = await fetch(`${window.location.origin}/api/create-checkout-session`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

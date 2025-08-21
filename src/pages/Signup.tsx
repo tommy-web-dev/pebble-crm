@@ -81,7 +81,7 @@ const Signup: React.FC = () => {
                     console.log('Account created successfully! Creating Stripe checkout session...');
                     
                     // Create checkout session with user ID
-                    const response = await fetch('/api/create-checkout-session', {
+                    const response = await fetch(`${window.location.origin}/api/create-checkout-session`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',

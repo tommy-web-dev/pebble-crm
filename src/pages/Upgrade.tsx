@@ -8,7 +8,7 @@ const Upgrade: React.FC = () => {
     const handleStartTrial = async () => {
         try {
             // Create checkout session with user ID
-            const response = await fetch('/api/create-checkout-session', {
+            const response = await fetch(`${window.location.origin}/api/create-checkout-session`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
