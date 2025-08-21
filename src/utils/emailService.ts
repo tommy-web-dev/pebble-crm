@@ -8,7 +8,7 @@ export const sendWelcomeEmail = async (data: WelcomeEmailData) => {
     try {
         console.log('Email service: Starting to send welcome email...');
         console.log('Email service: Calling server API endpoint...');
-        
+
         const response = await fetch(`${window.location.origin}/api/send-email`, {
             method: 'POST',
             headers: {
@@ -39,7 +39,7 @@ export const sendPaymentSuccessEmail = async (data: WelcomeEmailData) => {
     try {
         console.log('Email service: Starting to send payment success email...');
         console.log('Email service: Calling server API endpoint...');
-        
+
         const response = await fetch(`${window.location.origin}/api/send-email`, {
             method: 'POST',
             headers: {
