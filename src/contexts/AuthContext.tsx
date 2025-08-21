@@ -27,7 +27,7 @@ interface AuthContextType {
     currentUser: User | null;
     loading: boolean;
     login: (email: string, password: string) => Promise<void>;
-    signup: (email: string, password: string, displayName?: string) => Promise<void>;
+    signup: (email: string, password: string, displayName?: string) => Promise<any>;
     logout: () => Promise<void>;
     resetPassword: (email: string) => Promise<void>;
     sendVerificationEmail: () => Promise<void>;
@@ -69,6 +69,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         if (result.user) {
             await ensureUserDocument(result.user);
         }
+
+        return result;
     }
 
     async function login(email: string, password: string) {

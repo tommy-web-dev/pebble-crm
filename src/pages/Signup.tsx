@@ -56,7 +56,12 @@ const Signup: React.FC = () => {
             }
 
             // Create user account
-            await signup(formData.email, formData.password, formData.displayName);
+            const userCredential = await signup(formData.email, formData.password, formData.displayName);
+            const userId = userCredential?.user?.uid;
+
+            if (!userId) {
+                throw new Error('Failed to get user ID after signup');
+            }
 
             // Show success message and wait a moment for Firebase auth to complete
             setError('');
@@ -82,7 +87,7 @@ const Signup: React.FC = () => {
                             'Content-Type': 'application/json',
                         },
                         body: JSON.stringify({
-                            userId: currentUser?.uid,
+                            userId: userId,
                             email: formData.email,
                             displayName: formData.displayName
                         }),
