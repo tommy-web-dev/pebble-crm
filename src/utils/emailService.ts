@@ -11,6 +11,10 @@ export interface WelcomeEmailData {
 
 export const sendWelcomeEmail = async (data: WelcomeEmailData) => {
     try {
+        console.log('Email service: Starting to send welcome email...');
+        console.log('Email service: API key exists:', !!process.env.REACT_APP_RESEND_API_KEY);
+        console.log('Email service: Recipient:', data.email);
+        
         const { data: result, error } = await resend.emails.send({
             from: 'Pebble CRM <noreply@pebblecrm.app>',
             to: [data.email],

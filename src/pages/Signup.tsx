@@ -66,6 +66,7 @@ const Signup: React.FC = () => {
 
             // Send welcome email
             try {
+                console.log('Attempting to send welcome email...');
                 await sendWelcomeEmail({
                     email: formData.email,
                     displayName: formData.displayName,
@@ -81,6 +82,11 @@ const Signup: React.FC = () => {
             setError('');
             setLoading(false);
             setError('Account created! Setting up your free trial...');
+            
+            // Add delay to see console messages
+            console.log('Waiting 5 seconds before redirect...');
+            await new Promise(resolve => setTimeout(resolve, 5000));
+            console.log('Now proceeding with redirect...');
 
             // Add a timeout fallback in case Stripe redirect takes too long
             const redirectTimeout = setTimeout(() => {
