@@ -1,15 +1,17 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '../contexts/AppContext';
 import { useSettings } from '../contexts/SettingsContext';
 import { useAuth } from '../contexts/AuthContext';
 import { Contact } from '../types';
-import { getContacts, addContact, updateContact, deleteContact } from '../utils/firebase';
+import { getContacts, addContact, updateContact, deleteContact, addInteraction } from '../utils/firebase';
 import ContactForm from '../components/ContactForm';
 import ClientDetail from '../components/ClientDetail';
 import ContactSkeleton from '../components/ContactSkeleton';
 
 const Contacts: React.FC = () => {
-    const { contacts, setContacts, addContact: addContactToStore, updateContact: updateContactInStore, deleteContact: deleteContactFromStore } = useAppStore();
+    const navigate = useNavigate();
+    const { contacts, setContacts, addContact: addContactToStore, updateContact: updateContactInStore, deleteContact: deleteContactFromStore, addInteraction: addInteractionToStore } = useAppStore();
     const { currentUser } = useAuth();
     const { formatPhoneNumber } = useSettings();
 
@@ -18,6 +20,7 @@ const Contacts: React.FC = () => {
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [isDetailOpen, setIsDetailOpen] = useState(false);
     const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
+    const [showContactMenu, setShowContactMenu] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedTag, setSelectedTag] = useState('');
     const [sortBy, setSortBy] = useState<'name' | 'company' | 'createdAt'>('name');
@@ -43,17 +46,29 @@ const Contacts: React.FC = () => {
         }
     }, [currentUser, setContacts]);
 
+    // Close contact menu when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (showContactMenu && !(event.target as Element).closest('.relative')) {
+                setShowContactMenu(null);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [showContactMenu]);
+
     // Filter and sort contacts - only show clients
     const filteredContacts = useMemo(() => {
         let filtered = contacts.filter(contact => {
-            // Show clients and existing contacts without contactType (treat as clients for backward compatibility)
-            if (contact.contactType && contact.contactType !== 'client') return false;
-
             const matchesSearch = searchTerm === '' ||
                 contact.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 contact.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 (contact.email && contact.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
-                (contact.company && contact.company.toLowerCase().includes(searchTerm.toLowerCase()));
+                (contact.company && contact.company.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                (contact.tags && contact.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())));
 
             const matchesTag = selectedTag === '' ||
                 (contact.tags && contact.tags.includes(selectedTag));
@@ -110,24 +125,60 @@ const Contacts: React.FC = () => {
         setIsFormOpen(true);
     }, []);
 
-    const handleAddContact = useCallback(async (contactData: Omit<Contact, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) => {
+    const handleNavigateToJob = useCallback((jobId: string) => {
+        // Close the client detail modal
+        setIsDetailOpen(false);
+        // Navigate to the jobs page with the specific job ID
+        navigate(`/jobs?jobId=${jobId}`);
+    }, [navigate]);
+
+    const handleAddContact = useCallback(async (contactData: Omit<Contact, 'id' | 'userId' | 'createdAt' | 'updatedAt'>, interactions?: Array<{ type: string, date: string, notes: string }>) => {
         if (!currentUser) return;
 
         try {
             setLoading(true);
-            console.log('Adding contact with data:', contactData); // Debug log
+            console.log('Adding contact with data:', contactData);
+            console.log('Interactions to save:', interactions);
 
             // Ensure contactType is set to 'client' for this page
             const clientData = {
                 ...contactData,
-                contactType: 'client' as const,
                 userId: currentUser.uid
             };
 
-            console.log('Final client data:', clientData); // Debug log
+            console.log('Final client data:', clientData);
 
             // Add to Firebase only - DataLoader will automatically update the store
-            await addContact(clientData);
+            const newContact = await addContact(clientData);
+
+            // If there are interactions, save them to the database
+            if (interactions && interactions.length > 0 && newContact) {
+                console.log('Saving interactions for contact:', newContact.id);
+                console.log('Interactions to save:', interactions);
+
+                const savedInteractions = [];
+
+                for (const interaction of interactions) {
+                    try {
+                        const savedInteraction = await addInteraction({
+                            contactId: newContact.id,
+                            userId: currentUser.uid,
+                            type: interaction.type as 'call' | 'meeting' | 'email' | 'note' | 'follow-up' | 'proposal' | 'other',
+                            date: new Date(interaction.date),
+                            notes: interaction.notes
+                        });
+                        console.log('Saved interaction:', savedInteraction);
+                        savedInteractions.push(savedInteraction);
+
+                        // Add to global store immediately
+                        addInteractionToStore(savedInteraction);
+                    } catch (error) {
+                        console.error('Error saving interaction:', error);
+                    }
+                }
+
+                console.log('All interactions saved:', savedInteractions);
+            }
 
             setIsFormOpen(false);
         } catch (error: any) {
@@ -136,7 +187,7 @@ const Contacts: React.FC = () => {
         } finally {
             setLoading(false);
         }
-    }, [currentUser]);
+    }, [currentUser, addInteractionToStore]);
 
     const handleUpdateContact = useCallback(async (contactData: Omit<Contact, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) => {
         if (!selectedContact) return;
@@ -202,7 +253,7 @@ const Contacts: React.FC = () => {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+            <div className="max-w-none mx-auto px-8 sm:px-12 lg:px-16 py-8 space-y-8">
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
                     <div className="space-y-2">
@@ -307,7 +358,7 @@ const Contacts: React.FC = () => {
                                 </thead>
                                 <tbody className="bg-white divide-y divide-slate-100">
                                     {filteredContacts.map((contact) => (
-                                        <tr key={contact.id} className="hover:bg-slate-50 transition-colors duration-200">
+                                        <tr key={contact.id} className="hover:bg-slate-50 transition-colors duration-200 cursor-pointer" onClick={() => handleViewContact(contact)}>
                                             <td className="px-8 py-6 whitespace-nowrap">
                                                 <div className="flex items-center">
                                                     <div className="flex-shrink-0 h-12 w-12">
@@ -353,19 +404,55 @@ const Contacts: React.FC = () => {
                                                 </div>
                                             </td>
                                             <td className="px-8 py-6 whitespace-nowrap text-sm font-medium">
-                                                <div className="flex items-center space-x-3">
+                                                <div className="relative">
                                                     <button
-                                                        onClick={() => handleViewContact(contact)}
-                                                        className="text-blue-600 hover:text-blue-900 font-semibold transition-colors duration-200"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setShowContactMenu(showContactMenu === contact.id ? null : contact.id);
+                                                        }}
+                                                        className="text-slate-400 hover:text-slate-600 focus:outline-none focus:text-slate-600"
                                                     >
-                                                        View
+                                                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                                                        </svg>
                                                     </button>
-                                                    <button
-                                                        onClick={() => handleDeleteContact(contact.id)}
-                                                        className="text-red-600 hover:text-red-900 font-semibold transition-colors duration-200"
-                                                    >
-                                                        Delete
-                                                    </button>
+
+                                                    {/* Dropdown Menu */}
+                                                    {showContactMenu === contact.id && (
+                                                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-200 py-2 z-10">
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    setShowContactMenu(null);
+                                                                    handleViewContact(contact);
+                                                                }}
+                                                                className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors duration-200"
+                                                            >
+                                                                View Details
+                                                            </button>
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    setShowContactMenu(null);
+                                                                    setSelectedContact(contact);
+                                                                    setIsFormOpen(true);
+                                                                }}
+                                                                className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors duration-200"
+                                                            >
+                                                                Edit Client
+                                                            </button>
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    setShowContactMenu(null);
+                                                                    handleDeleteContact(contact.id);
+                                                                }}
+                                                                className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors duration-200"
+                                                            >
+                                                                Delete Client
+                                                            </button>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </td>
                                         </tr>
@@ -402,7 +489,6 @@ const Contacts: React.FC = () => {
                     onSubmit={selectedContact ? handleUpdateContact : handleAddContact}
                     onCancel={handleFormCancel}
                     isOpen={isFormOpen}
-                    defaultContactType="client"
                 />
 
                 {/* Contact Detail Modal */}
@@ -415,6 +501,7 @@ const Contacts: React.FC = () => {
                             setIsFormOpen(true);
                         }}
                         onDelete={() => handleDeleteContact(selectedContact.id)}
+                        onNavigateToJob={handleNavigateToJob}
                     />
                 )}
             </div>

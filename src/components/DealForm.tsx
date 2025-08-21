@@ -14,36 +14,63 @@ const DealForm: React.FC<DealFormProps> = ({ deal, contacts, onSubmit, onCancel,
         title: '',
         value: '',
         stage: 'lead' as Deal['stage'],
-        probability: 25,
-        expectedCloseDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30 days from now
-        notes: ''
+        notes: '',
+        // New recruitment-specific fields
+        jobType: '',
+        requirements: '',
+        startDate: '',
+        feePercentage: '',
+        isExclusive: false,
+        location: '',
+        recruiter: ''
     });
     const [selectedContactId, setSelectedContactId] = useState<string>('');
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    // Handle ESC key press
+    useEffect(() => {
+        const handleEscKey = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') {
+                onCancel();
+            }
+        };
+
+        if (isOpen) {
+            document.addEventListener('keydown', handleEscKey);
+        }
+
+        return () => {
+            document.removeEventListener('keydown', handleEscKey);
+        };
+    }, [isOpen, onCancel]);
+
+    // Handle click outside modal
+    const handleBackdropClick = (event: React.MouseEvent<HTMLDivElement>) => {
+        if (event.target === event.currentTarget) {
+            onCancel();
+        }
+    };
+
     // Reset form when deal prop changes
     useEffect(() => {
         if (deal) {
             // Edit mode - populate form with deal data
-            // Ensure date is properly converted to Date object
-            let dealDate = deal.expectedCloseDate;
-            if (dealDate && typeof dealDate === 'object' && 'toDate' in dealDate) {
-                // It's a Firestore Timestamp, convert to Date
-                dealDate = (dealDate as any).toDate();
-            } else if (dealDate && typeof dealDate === 'string') {
-                // It's a string, convert to Date
-                dealDate = new Date(dealDate);
-            }
-
             setFormData({
                 title: deal.title,
                 value: deal.value.toString(),
                 stage: deal.stage,
-                probability: deal.probability,
-                expectedCloseDate: dealDate instanceof Date ? dealDate.toISOString().split('T')[0] : '',
-                notes: deal.notes || ''
+                notes: deal.notes || '',
+                // New fields with defaults
+                jobType: (deal as any).jobType || '',
+                requirements: (deal as any).requirements || '',
+                startDate: deal.stage === 'placed' && (deal as any).startDate && (deal as any).startDate instanceof Date ? (deal as any).startDate.toISOString().split('T')[0] : '',
+                feePercentage: (deal as any).feePercentage ? String((deal as any).feePercentage) : '',
+                isExclusive: (deal as any).isExclusive || false,
+                location: (deal as any).location || '',
+                recruiter: (deal as any).recruiter || ''
             });
+            console.log('Setting selectedContactId to:', deal.contactId);
             setSelectedContactId(deal.contactId);
         } else {
             // Add mode - clear form
@@ -51,34 +78,50 @@ const DealForm: React.FC<DealFormProps> = ({ deal, contacts, onSubmit, onCancel,
                 title: '',
                 value: '',
                 stage: 'lead',
-                probability: 25,
-                expectedCloseDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-                notes: ''
+                notes: '',
+                // New fields with defaults
+                jobType: '',
+                requirements: '',
+                startDate: '',
+                feePercentage: '',
+                isExclusive: false,
+                location: '',
+                recruiter: ''
             });
             setSelectedContactId('');
         }
         setErrors({});
-    }, [deal]);
+    }, [deal, setSelectedContactId]);
 
     const validateForm = () => {
         const newErrors: Record<string, string> = {};
 
+        console.log('Validating form with data:', { formData, selectedContactId });
+
         if (!formData.title.trim()) {
-            newErrors.title = 'Deal title is required';
+            newErrors.title = 'Job title is required';
         }
 
         if (!formData.value || isNaN(Number(formData.value)) || Number(formData.value) <= 0) {
-            newErrors.value = 'Valid deal value is required';
+            newErrors.value = 'Valid salary is required';
         }
 
         if (!selectedContactId) {
-            newErrors.contact = 'Please select a contact';
+            console.log('Contact validation failed - selectedContactId is:', selectedContactId);
+            console.log('Available contacts:', contacts?.length);
+            newErrors.contact = 'Please select a client';
         }
 
-        if (formData.probability < 0 || formData.probability > 100) {
-            newErrors.probability = 'Probability must be between 0 and 100';
+        if (formData.feePercentage && (isNaN(Number(formData.feePercentage)) || Number(formData.feePercentage) <= 0 || Number(formData.feePercentage) > 100)) {
+            newErrors.feePercentage = 'Fee percentage must be between 0 and 100';
         }
 
+        // Require start date when stage is 'placed'
+        if (formData.stage === 'placed' && (!formData.startDate || !formData.startDate.trim())) {
+            newErrors.startDate = 'Start date is required when marking job as placed';
+        }
+
+        console.log('Validation errors:', newErrors);
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -87,215 +130,335 @@ const DealForm: React.FC<DealFormProps> = ({ deal, contacts, onSubmit, onCancel,
         e.preventDefault();
 
         if (!validateForm()) {
+            console.log('Form validation failed');
             return;
         }
 
         setIsSubmitting(true);
 
         try {
-            const dealData = {
+            const dealData: any = {
                 title: formData.title.trim(),
                 value: Number(formData.value),
                 stage: formData.stage,
-                probability: formData.probability,
-                expectedCloseDate: formData.expectedCloseDate ? new Date(formData.expectedCloseDate) : undefined,
-                notes: formData.notes.trim() || '',
-                contactId: selectedContactId
+                probability: 0, // Default value since we removed it from the form
+                notes: formData.notes.trim(),
+                contactId: selectedContactId,
+                // New fields
+                jobType: formData.jobType.trim(),
+                requirements: formData.requirements.trim(),
+                feePercentage: formData.feePercentage ? Number(formData.feePercentage) : undefined,
+                isExclusive: formData.isExclusive,
+                location: formData.location.trim(),
+                recruiter: formData.recruiter.trim() || undefined
             };
 
-            await onSubmit(dealData);
+            // Only include startDate if stage is 'placed' and we have a valid date
+            if (formData.stage === 'placed' && formData.startDate && formData.startDate.trim()) {
+                dealData.startDate = new Date(formData.startDate);
+            }
+
+            // Filter out any undefined values before submitting
+            const cleanDealData = Object.fromEntries(
+                Object.entries(dealData).filter(([_, value]) => value !== undefined)
+            ) as Omit<Deal, 'id' | 'userId' | 'createdAt' | 'updatedAt'>;
+
+            console.log('Submitting deal data:', cleanDealData);
+            console.log('Data types:', Object.fromEntries(
+                Object.entries(cleanDealData).map(([key, value]) => [key, typeof value])
+            ));
+            await onSubmit(cleanDealData);
+            console.log('Deal submission successful');
         } catch (error) {
-            console.error('Form submission error:', error);
+            console.error('Error saving job:', error);
+            alert(`Failed to save job: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`);
         } finally {
             setIsSubmitting(false);
         }
     };
 
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+        const { name, value, type } = e.target;
+
+        if (type === 'checkbox') {
+            const checked = (e.target as HTMLInputElement).checked;
+            setFormData(prev => ({ ...prev, [name]: checked }));
+        } else {
+            setFormData(prev => ({ ...prev, [name]: value }));
+        }
+    };
+
+    // Calculate fee based on value and fee percentage
+    const calculatedFee = formData.value && formData.feePercentage
+        ? (Number(formData.value) * Number(formData.feePercentage) / 100).toFixed(2)
+        : '0.00';
+
     if (!isOpen) return null;
 
-    const isEditMode = !!deal;
-    const title = isEditMode ? 'Edit Opportunity' : 'Add New Opportunity';
-    const submitText = isEditMode ? 'Update Opportunity' : 'Create Opportunity';
-
     return (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-[70]">
-            <div className="relative top-20 mx-auto p-6 border w-full max-w-lg shadow-xl rounded-xl bg-white">
-                {/* Header */}
-                <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
-                            <span className="text-primary-600 text-xl">🎯</span>
-                        </div>
-                        <div>
-                            <h3 className="text-xl font-semibold text-gray-900">{title}</h3>
-                            <p className="text-sm text-gray-500">
-                                {isEditMode ? 'Update opportunity details' : 'Create a new opportunity to track in your pipeline'}
-                            </p>
-                        </div>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={handleBackdropClick}>
+            <div className="bg-white rounded-2xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                <div className="p-6 border-b border-slate-200">
+                    <div className="flex items-center justify-between">
+                        <h2 className="text-2xl font-bold text-slate-900">
+                            {deal ? 'Edit Job Order' : 'Add New Job Order'}
+                        </h2>
+                        <button
+                            onClick={onCancel}
+                            className="text-slate-400 hover:text-slate-600 transition-colors"
+                        >
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
                     </div>
-
-                    <button
-                        onClick={onCancel}
-                        className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                    >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-6">
-                    {/* Deal Title */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Deal Title *
-                        </label>
-                        <input
-                            type="text"
-                            value={formData.title}
-                            onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors ${errors.title ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300'
-                                }`}
-                            placeholder="What's the deal about?"
-                        />
-                        {errors.title && (
-                            <p className="mt-1 text-sm text-red-600">{errors.title}</p>
-                        )}
+                <form onSubmit={handleSubmit} className="p-6 space-y-6">
+                    {/* Basic Information */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label className="block text-sm font-semibold text-slate-700 mb-2">
+                                Job Title *
+                            </label>
+                            <input
+                                type="text"
+                                name="title"
+                                value={formData.title}
+                                onChange={handleInputChange}
+                                className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${errors.title ? 'border-red-500' : 'border-slate-200'
+                                    }`}
+                                placeholder="e.g., Senior Software Engineer"
+                            />
+                            {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title}</p>}
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-semibold text-slate-700 mb-2">
+                                Client *
+                            </label>
+                            <select
+                                value={selectedContactId}
+                                onChange={(e) => setSelectedContactId(e.target.value)}
+                                className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${errors.contact ? 'border-red-500' : 'border-slate-200'
+                                    }`}
+                            >
+                                <option value="">Select a client</option>
+                                {contacts.map(contact => (
+                                    <option key={contact.id} value={contact.id}>
+                                        {contact.firstName} {contact.lastName} {contact.company ? `(${contact.company})` : ''}
+                                    </option>
+                                ))}
+                            </select>
+                            {errors.contact && <p className="text-red-500 text-sm mt-1">{errors.contact}</p>}
+                        </div>
                     </div>
 
-                    {/* Contact Selection */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Contact *
-                        </label>
-                        <select
-                            value={selectedContactId}
-                            onChange={(e) => setSelectedContactId(e.target.value)}
-                            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors ${errors.contact ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300'
-                                }`}
-                        >
-                            <option value="">Select a contact</option>
-                            {contacts.map((contact) => (
-                                <option key={contact.id} value={contact.id}>
-                                    {contact.firstName} {contact.lastName}
-                                    {contact.company && ` - ${contact.company}`}
-                                </option>
-                            ))}
-                        </select>
-                        {errors.contact && (
-                            <p className="mt-1 text-sm text-red-600">{errors.contact}</p>
-                        )}
+                    {/* Job Details */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div>
+                            <label className="block text-sm font-semibold text-slate-700 mb-2">
+                                Job Type
+                            </label>
+                            <select
+                                name="jobType"
+                                value={formData.jobType}
+                                onChange={handleInputChange}
+                                className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                            >
+                                <option value="">Select job type</option>
+                                <option value="permanent">Permanent</option>
+                                <option value="contract">Contract</option>
+                                <option value="temporary">Temporary</option>
+                                <option value="part-time">Part-time</option>
+                                <option value="freelance">Freelance</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-semibold text-slate-700 mb-2">
+                                Location
+                            </label>
+                            <input
+                                type="text"
+                                name="location"
+                                value={formData.location}
+                                onChange={handleInputChange}
+                                className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                                placeholder="e.g., London, UK"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-semibold text-slate-700 mb-2">
+                                Recruiter
+                            </label>
+                            <input
+                                type="text"
+                                name="recruiter"
+                                value={formData.recruiter}
+                                onChange={handleInputChange}
+                                className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                                placeholder="e.g., John Smith"
+                            />
+                        </div>
                     </div>
 
-                    {/* Deal Value */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Deal Value *
-                        </label>
-                        <div className="relative">
-                            <span className="absolute left-3 top-2 text-gray-500">$</span>
+                    {/* Company Information */}
+                    <div className="flex items-center space-x-4">
+                        <div className="flex items-center">
+                            <input
+                                type="checkbox"
+                                name="isExclusive"
+                                checked={formData.isExclusive}
+                                onChange={handleInputChange}
+                                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-300 rounded"
+                            />
+                            <label className="ml-2 text-sm font-medium text-slate-700">
+                                Exclusive Terms
+                            </label>
+                        </div>
+                    </div>
+
+                    {/* Financial Information */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label className="block text-sm font-semibold text-slate-700 mb-2">
+                                Salary *
+                            </label>
                             <input
                                 type="number"
+                                name="value"
                                 value={formData.value}
-                                onChange={(e) => setFormData(prev => ({ ...prev, value: e.target.value }))}
-                                className={`w-full pl-8 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors ${errors.value ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300'
+                                onChange={handleInputChange}
+                                className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${errors.value ? 'border-red-500' : 'border-slate-200'
                                     }`}
                                 placeholder="0.00"
                                 min="0"
                                 step="0.01"
                             />
+                            {errors.value && <p className="text-red-500 text-sm mt-1">{errors.value}</p>}
                         </div>
-                        {errors.value && (
-                            <p className="mt-1 text-sm text-red-600">{errors.value}</p>
-                        )}
+
+                        <div>
+                            <label className="block text-sm font-semibold text-slate-700 mb-2">
+                                Fee Percentage (%)
+                            </label>
+                            <input
+                                type="number"
+                                name="feePercentage"
+                                value={formData.feePercentage}
+                                onChange={handleInputChange}
+                                className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${errors.feePercentage ? 'border-red-500' : 'border-slate-200'
+                                    }`}
+                                placeholder="15"
+                                min="0"
+                                max="100"
+                                step="0.1"
+                            />
+                            {errors.feePercentage && <p className="text-red-500 text-sm mt-1">{errors.feePercentage}</p>}
+                        </div>
                     </div>
 
-                    {/* Stage */}
+                    {/* Calculated Fee Display */}
+                    {formData.value && formData.feePercentage && (
+                        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                            <div className="flex items-center justify-between">
+                                <span className="text-sm font-medium text-blue-800">Calculated Fee:</span>
+                                <span className="text-lg font-bold text-blue-900">£{calculatedFee}</span>
+                            </div>
+                            <p className="text-xs text-blue-600 mt-1">
+                                Based on {formData.value} × {formData.feePercentage}%
+                            </p>
+                        </div>
+                    )}
+
+                    {/* Stage Selection */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-semibold text-slate-700 mb-2">
                             Stage
                         </label>
                         <select
+                            name="stage"
                             value={formData.stage}
-                            onChange={(e) => setFormData(prev => ({ ...prev, stage: e.target.value as Deal['stage'] }))}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                            onChange={handleInputChange}
+                            className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                         >
-                            <option value="lead">🟢 Lead</option>
-                            <option value="negotiating">🟠 Negotiating</option>
-                            <option value="live-opportunity">🔵 Live Opportunity</option>
-                            <option value="closed-won">✅ Closed Won</option>
-                            <option value="closed-lost">❌ Closed Lost</option>
+                            <option value="lead">Lead</option>
+                            <option value="live-opportunity">Live Job</option>
+                            <option value="shortlist-sent">Shortlist Sent</option>
+                            <option value="interview">Interview</option>
+                            <option value="offer">Offer</option>
+                            <option value="placed">Placed</option>
                         </select>
                     </div>
 
-                    {/* Probability */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Probability: {formData.probability}%
-                        </label>
-                        <input
-                            type="range"
-                            value={formData.probability}
-                            onChange={(e) => setFormData(prev => ({ ...prev, probability: Number(e.target.value) }))}
-                            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
-                            min="0"
-                            max="100"
-                            step="5"
-                        />
-                        {errors.probability && (
-                            <p className="mt-1 text-sm text-red-600">{errors.probability}</p>
-                        )}
-                    </div>
+                    {/* Start Date - Only show when stage is 'placed' */}
+                    {formData.stage === 'placed' && (
+                        <div>
+                            <label className="block text-sm font-semibold text-slate-700 mb-2">
+                                Start Date *
+                            </label>
+                            <input
+                                type="date"
+                                name="startDate"
+                                value={formData.startDate}
+                                onChange={handleInputChange}
+                                className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                                required
+                            />
+                            <p className="text-xs text-slate-500 mt-1">
+                                Required when marking job as placed
+                            </p>
+                            {errors.startDate && <p className="text-red-500 text-sm mt-1">{errors.startDate}</p>}
+                        </div>
+                    )}
 
-                    {/* Expected Close Date */}
+                    {/* Requirements */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Expected Close Date
+                        <label className="block text-sm font-semibold text-slate-700 mb-2">
+                            Job Requirements
                         </label>
-                        <input
-                            type="date"
-                            value={formData.expectedCloseDate}
-                            onChange={(e) => setFormData(prev => ({ ...prev, expectedCloseDate: e.target.value }))}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                        <textarea
+                            name="requirements"
+                            value={formData.requirements}
+                            onChange={handleInputChange}
+                            rows={4}
+                            className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                            placeholder="Describe the key requirements, skills, and experience needed for this role..."
                         />
                     </div>
 
                     {/* Notes */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Notes
+                        <label className="block text-sm font-semibold text-slate-700 mb-2">
+                            Additional Notes
                         </label>
                         <textarea
+                            name="notes"
                             value={formData.notes}
-                            onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors min-h-[100px] resize-none"
-                            placeholder="Add notes about this deal..."
+                            onChange={handleInputChange}
+                            rows={3}
+                            className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                            placeholder="Any additional information about this job order..."
                         />
                     </div>
 
                     {/* Form Actions */}
-                    <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+                    <div className="flex items-center justify-end space-x-4 pt-6 border-t border-slate-200">
                         <button
                             type="button"
                             onClick={onCancel}
-                            className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors font-medium"
-                            disabled={isSubmitting}
+                            className="px-6 py-3 border border-slate-300 text-slate-700 rounded-xl hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 transition-all duration-200"
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
-                            className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                             disabled={isSubmitting}
+                            className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
                         >
-                            {isSubmitting ? (
-                                <div className="flex items-center space-x-2">
-                                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                    <span>Processing...</span>
-                                </div>
-                            ) : (
-                                submitText
-                            )}
+                            {isSubmitting ? 'Saving...' : (deal ? 'Update Job' : 'Create Job')}
                         </button>
                     </div>
                 </form>

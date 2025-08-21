@@ -19,7 +19,7 @@ const Settings: React.FC = () => {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+            <div className="max-w-none mx-auto px-8 sm:px-12 lg:px-16 py-8 space-y-8">
                 <div className="space-y-2">
                     <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-900 via-blue-900 to-slate-900 bg-clip-text text-transparent">
                         Settings
@@ -170,15 +170,15 @@ const Settings: React.FC = () => {
                     </div>
                     <div className="space-y-4 text-slate-600">
                         <p className="text-lg">
-                            Pebble is a modern, lightweight CRM designed for solo professionals and freelancers.
+                            Pebble is a modern, lightweight CRM designed for Solo Recruiters & small firms.
                             Built with simplicity and efficiency in mind, it helps you manage your business relationships,
-                            track opportunities, and stay organized.
+                            track opportunities, and stay organised.
                         </p>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
                             <div className="text-center p-4 bg-gradient-to-br from-slate-50 to-blue-50 rounded-xl border border-slate-200/50">
                                 <div className="text-2xl mb-2">🚀</div>
                                 <h4 className="font-semibold text-slate-900 mb-1">Fast & Lightweight</h4>
-                                <p className="text-sm text-slate-600">Optimized for speed and performance</p>
+                                <p className="text-sm text-slate-600">Optimised for speed and performance</p>
                             </div>
                             <div className="text-center p-4 bg-gradient-to-br from-slate-50 to-blue-50 rounded-xl border border-slate-200/50">
                                 <div className="text-2xl mb-2">📱</div>

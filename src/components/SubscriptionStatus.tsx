@@ -276,8 +276,8 @@ const SubscriptionStatus: React.FC = () => {
             <div className="mt-6 pt-4 border-t border-gray-200">
                 {cancelMessage && (
                     <div className={`mb-4 p-3 rounded-md text-sm ${cancelMessage.includes('successfully')
-                            ? 'bg-green-50 text-green-800 border border-green-200'
-                            : 'bg-red-50 text-red-800 border border-red-200'
+                        ? 'bg-green-50 text-green-800 border border-green-200'
+                        : 'bg-red-50 text-red-800 border border-red-200'
                         }`}>
                         {cancelMessage}
                     </div>

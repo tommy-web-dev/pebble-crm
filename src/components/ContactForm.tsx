@@ -1,17 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useSettings } from '../contexts/SettingsContext';
-import { Contact, Tag } from '../types';
+import { Contact } from '../types';
+import { useAuth } from '../contexts/AuthContext';
 
 interface ContactFormProps {
     contact?: Contact | null;
-    onSubmit: (contact: Omit<Contact, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+    onSubmit: (contact: Omit<Contact, 'id' | 'userId' | 'createdAt' | 'updatedAt'>, interactions?: Array<{ type: string, date: string, notes: string }>) => Promise<void>;
     onCancel: () => void;
     isOpen: boolean;
-    defaultContactType?: 'client' | 'candidate';
 }
 
-const ContactForm: React.FC<ContactFormProps> = ({ contact, onSubmit, onCancel, isOpen, defaultContactType = 'client' }) => {
+const ContactForm: React.FC<ContactFormProps> = ({ contact, onSubmit, onCancel, isOpen }) => {
     const { formatPhoneNumber } = useSettings();
+    const { currentUser } = useAuth();
 
     const [formData, setFormData] = useState({
         firstName: '',
@@ -20,13 +21,24 @@ const ContactForm: React.FC<ContactFormProps> = ({ contact, onSubmit, onCancel, 
         phone: '',
         company: '',
         position: '',
-        contactType: defaultContactType,
         notes: '',
         tags: [] as string[]
     });
     const [newTag, setNewTag] = useState('');
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    // Interaction state
+    const [interactionData, setInteractionData] = useState({
+        type: '',
+        date: new Date().toISOString().split('T')[0], // Today's date as default
+        notes: ''
+    });
+    const [interactions, setInteractions] = useState<Array<{
+        type: string;
+        date: string;
+        notes: string;
+    }>>([]);
 
     // Reset form when contact prop changes
     useEffect(() => {
@@ -39,7 +51,6 @@ const ContactForm: React.FC<ContactFormProps> = ({ contact, onSubmit, onCancel, 
                 phone: contact.phone || '',
                 company: contact.company || '',
                 position: contact.position || '',
-                contactType: contact.contactType || defaultContactType,
                 notes: contact.notes || '',
                 tags: [...contact.tags]
             });
@@ -52,7 +63,6 @@ const ContactForm: React.FC<ContactFormProps> = ({ contact, onSubmit, onCancel, 
                 phone: '',
                 company: '',
                 position: '',
-                contactType: defaultContactType,
                 notes: '',
                 tags: []
             });
@@ -81,6 +91,8 @@ const ContactForm: React.FC<ContactFormProps> = ({ contact, onSubmit, onCancel, 
         return Object.keys(newErrors).length === 0;
     };
 
+
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
@@ -99,12 +111,21 @@ const ContactForm: React.FC<ContactFormProps> = ({ contact, onSubmit, onCancel, 
                 phone: formData.phone.trim() || undefined,
                 company: formData.company.trim() || undefined,
                 position: formData.position.trim() || undefined,
-                contactType: formData.contactType,
                 notes: formData.notes.trim() || '',
                 tags: formData.tags
             };
 
-            await onSubmit(contactData);
+            // Submit the contact first
+            await onSubmit(contactData, interactions);
+
+            // If there are interactions and we're adding a new contact, save them to the database
+            if (interactions.length > 0 && !contact && currentUser) {
+                // We need to get the contact ID that was just created
+                // Since we don't have it yet, we'll need to handle this differently
+                // For now, let's store interactions in the contact data and handle them in the parent component
+                console.log('Interactions to be saved:', interactions);
+            }
+
         } catch (error) {
             console.error('Form submission error:', error);
         } finally {
@@ -112,36 +133,61 @@ const ContactForm: React.FC<ContactFormProps> = ({ contact, onSubmit, onCancel, 
         }
     };
 
-    const addTag = () => {
-        if (newTag.trim() && !formData.tags.includes(newTag.trim())) {
-            setFormData(prev => ({
-                ...prev,
-                tags: [...prev.tags, newTag.trim()]
-            }));
-            setNewTag('');
-        }
-    };
-
-    const removeTag = (tagToRemove: string) => {
-        setFormData(prev => ({
-            ...prev,
-            tags: prev.tags.filter(tag => tag !== tagToRemove)
-        }));
-    };
-
     const handleKeyPress = (e: React.KeyboardEvent) => {
-        if (e.key === 'Enter' && e.target === e.currentTarget) {
+        if (e.key === 'Enter') {
             e.preventDefault();
             addTag();
         }
     };
 
+    const addTag = () => {
+        if (newTag.trim() && !formData.tags.includes(newTag.trim())) {
+            setFormData(prev => ({ ...prev, tags: [...prev.tags, newTag.trim()] }));
+            setNewTag('');
+        }
+    };
+
+    const removeTag = (tagToRemove: string) => {
+        setFormData(prev => ({ ...prev, tags: prev.tags.filter(tag => tag !== tagToRemove) }));
+    };
+
+    // Interaction handling functions
+    const handleInteractionChange = (field: string, value: string) => {
+        setInteractionData(prev => ({ ...prev, [field]: value }));
+    };
+
+    const addInteraction = () => {
+        if (interactionData.type && interactionData.date && interactionData.notes.trim()) {
+            setInteractions(prev => [...prev, { ...interactionData }]);
+            // Clear interaction form
+            setInteractionData({
+                type: '',
+                date: new Date().toISOString().split('T')[0],
+                notes: ''
+            });
+            // Show brief success feedback
+            const button = document.querySelector('[data-interaction-button]') as HTMLButtonElement;
+            if (button) {
+                const originalText = button.textContent;
+                button.textContent = 'Added!';
+                button.classList.add('bg-green-600');
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.classList.remove('bg-green-600');
+                }, 1000);
+            }
+        }
+    };
+
+    const removeInteraction = (index: number) => {
+        setInteractions(prev => prev.filter((_, i) => i !== index));
+    };
+
     if (!isOpen) return null;
 
     const isEditMode = !!contact;
-    const isClient = formData.contactType === 'client';
-    const title = isEditMode ? `Edit ${isClient ? 'Client' : 'Candidate'}` : `Add New ${isClient ? 'Client' : 'Candidate'}`;
-    const submitText = isEditMode ? `Update ${isClient ? 'Client' : 'Candidate'}` : `Add ${isClient ? 'Client' : 'Candidate'}`;
+    const title = isEditMode ? 'Edit Client' : 'Add New Client';
+    const submitText = isEditMode ? 'Update Client' : 'Add Client';
 
     return (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-[60]">
@@ -155,7 +201,12 @@ const ContactForm: React.FC<ContactFormProps> = ({ contact, onSubmit, onCancel, 
                         <div>
                             <h3 className="text-xl font-semibold text-gray-900">{title}</h3>
                             <p className="text-sm text-gray-500">
-                                {isEditMode ? 'Update contact information' : 'Add a new contact to your CRM'}
+                                {isEditMode ? 'Update client information' : 'Add a new client to your CRM'}
+                                {interactions.length > 0 && (
+                                    <span className="ml-2 text-primary-600 font-medium">
+                                        • {interactions.length} interaction{interactions.length !== 1 ? 's' : ''} added
+                                    </span>
+                                )}
                             </p>
                         </div>
                     </div>
@@ -273,19 +324,100 @@ const ContactForm: React.FC<ContactFormProps> = ({ contact, onSubmit, onCancel, 
                         </div>
                     </div>
 
-                    {/* Contact Type */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Contact Type
-                        </label>
-                        <select
-                            value={formData.contactType}
-                            onChange={(e) => setFormData(prev => ({ ...prev, contactType: e.target.value as 'client' | 'candidate' }))}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
-                        >
-                            <option value="client">Client</option>
-                            <option value="candidate">Candidate</option>
-                        </select>
+                    {/* Add Interaction Section */}
+                    <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                        <h3 className="text-lg font-medium text-gray-900 mb-3">Add Interaction</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Interaction Type *
+                                </label>
+                                <select
+                                    value={interactionData.type}
+                                    onChange={(e) => handleInteractionChange('type', e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                                >
+                                    <option value="">Select interaction type</option>
+                                    <option value="call">Phone Call</option>
+                                    <option value="email">Email</option>
+                                    <option value="meeting">Meeting</option>
+                                    <option value="proposal">Proposal Sent</option>
+                                    <option value="follow_up">Follow Up</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Date *
+                                </label>
+                                <input
+                                    type="date"
+                                    value={interactionData.date}
+                                    onChange={(e) => handleInteractionChange('date', e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                                />
+                            </div>
+                        </div>
+                        <div className="mt-4">
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Interaction Notes *
+                            </label>
+                            <textarea
+                                value={interactionData.notes}
+                                onChange={(e) => handleInteractionChange('notes', e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors min-h-[80px] resize-none"
+                                placeholder="Add notes about this interaction..."
+                            />
+                        </div>
+                        <div className="mt-4 flex justify-end">
+                            <button
+                                type="button"
+                                onClick={addInteraction}
+                                disabled={!interactionData.type || !interactionData.date || !interactionData.notes.trim()}
+                                className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                                data-interaction-button
+                            >
+                                Add Interaction
+                            </button>
+                        </div>
+
+                        {/* Helper text for incomplete interactions */}
+                        {interactionData.type || interactionData.date || interactionData.notes.trim() ? (
+                            <div className="mt-2 text-xs text-gray-500">
+                                {!interactionData.type && <span className="block">• Select an interaction type</span>}
+                                {!interactionData.date && <span className="block">• Choose a date</span>}
+                                {!interactionData.notes.trim() && <span className="block">• Add interaction notes</span>}
+                            </div>
+                        ) : null}
+
+                        {/* Display added interactions */}
+                        {interactions.length > 0 && (
+                            <div className="mt-4 pt-4 border-t border-gray-200">
+                                <h4 className="text-sm font-medium text-gray-700 mb-3">Added Interactions:</h4>
+                                <div className="space-y-2">
+                                    {interactions.map((interaction, index) => (
+                                        <div key={index} className="flex items-center justify-between bg-white p-3 rounded-lg border border-gray-200">
+                                            <div className="flex-1">
+                                                <div className="flex items-center space-x-3">
+                                                    <span className="text-sm font-medium text-gray-900 capitalize">{interaction.type.replace('_', ' ')}</span>
+                                                    <span className="text-sm text-gray-500">{interaction.date}</span>
+                                                </div>
+                                                <p className="text-sm text-gray-600 mt-1">{interaction.notes}</p>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => removeInteraction(index)}
+                                                className="ml-2 text-red-600 hover:text-red-800 p-1"
+                                            >
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* Tags */}

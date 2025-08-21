@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { redirectToStripeCheckout } from '../utils/stripeCheckout';
 import { checkExistingSubscription } from '../utils/stripe';
 
 const Signup: React.FC = () => {
@@ -77,7 +76,7 @@ const Signup: React.FC = () => {
                     console.log('Account created successfully! Redirecting to Stripe Payment Link...');
 
                     // Go directly to Stripe Payment Link
-                    window.location.href = 'https://buy.stripe.com/3cI7sM6A6gho26VgUefjG00';
+                    window.location.href = 'https://buy.stripe.com/28E9AUcYu3uC8vjavQfjG01';
 
                     // Clear timeout if redirect succeeds
                     clearTimeout(redirectTimeout);
@@ -124,7 +123,7 @@ const Signup: React.FC = () => {
                         Start Your Free Trial
                     </h1>
                     <p className="text-slate-600">
-                        Create your account and get 7 days free access to Pebble CRM
+                        Create your account and start 30-day free trial!
                     </p>
                 </div>
 

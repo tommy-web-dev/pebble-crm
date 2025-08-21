@@ -1,31 +1,14 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useAppStore } from '../contexts/AppContext';
-import { getSubscriptionStatus } from '../utils/stripe';
-import { UserSubscription } from '../types';
 
 const Sidebar: React.FC = () => {
     const { currentUser, logout } = useAuth();
     const { sidebarOpen, setSidebarOpen } = useAppStore();
     const location = useLocation();
-    const [subscription, setSubscription] = React.useState<UserSubscription | null>(null);
+    const navigate = useNavigate();
 
-    // Load subscription status
-    React.useEffect(() => {
-        const loadSubscription = async () => {
-            if (currentUser) {
-                try {
-                    const sub = await getSubscriptionStatus(currentUser!.uid);
-                    setSubscription(sub);
-                } catch (error) {
-                    console.error('Error loading subscription:', error);
-                    setSubscription(null);
-                }
-            }
-        };
-        loadSubscription();
-    }, [currentUser]);
 
     const navigation = [
         {
@@ -48,10 +31,19 @@ const Sidebar: React.FC = () => {
         },
         {
             name: 'Jobs',
-            href: '/pipeline',
+            href: '/jobs',
             icon: (
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M9 11h.01" />
+                </svg>
+            )
+        },
+        {
+            name: 'Candidates',
+            href: '/candidates',
+            icon: (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
             )
         },
@@ -94,7 +86,10 @@ const Sidebar: React.FC = () => {
       `}>
                 {/* Sidebar Header */}
                 <div className="flex items-center justify-between h-16 px-6 border-b border-slate-200/50 bg-gradient-to-r from-slate-50 to-blue-50/30">
-                    <div className="flex items-center space-x-3">
+                    <button 
+                        onClick={() => navigate('/')}
+                        className="flex items-center space-x-3 hover:opacity-80 transition-opacity duration-200 cursor-pointer"
+                    >
                         <div className="w-8 h-8 bg-gradient-to-br from-slate-700 to-blue-600 rounded-lg flex items-center justify-center shadow-lg">
                             <span className="text-white font-bold text-lg">P</span>
                         </div>
@@ -102,13 +97,8 @@ const Sidebar: React.FC = () => {
                             <span className="text-xl font-bold bg-gradient-to-r from-slate-700 to-blue-600 bg-clip-text text-transparent">
                                 Pebble
                             </span>
-                            {subscription && (
-                                <span className="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full border border-green-200">
-                                    Active
-                                </span>
-                            )}
                         </div>
-                    </div>
+                    </button>
 
                     {/* Mobile close button */}
                     <button

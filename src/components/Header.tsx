@@ -1,27 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '../contexts/AppContext';
-import { useAuth } from '../contexts/AuthContext';
-import { getSubscriptionStatus } from '../utils/stripe';
-import { UserSubscription } from '../types';
 
 const Header: React.FC = () => {
-    const { sidebarOpen, setSidebarOpen } = useAppStore();
-    const { currentUser } = useAuth();
-    const [subscription, setSubscription] = useState<UserSubscription | null>(null);
-
-    useEffect(() => {
-        const loadSubscription = async () => {
-            if (currentUser) {
-                try {
-                    const sub = await getSubscriptionStatus(currentUser.uid);
-                    setSubscription(sub);
-                } catch (error) {
-                    console.error('Error loading subscription:', error);
-                }
-            }
-        };
-        loadSubscription();
-    }, [currentUser]);
+    const { setSidebarOpen } = useAppStore();
 
     return (
         <header className="fixed top-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/50 shadow-sm">
@@ -50,25 +32,9 @@ const Header: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Right side - Subscription status and user info */}
+                {/* Right side - Empty for now, just keeping the layout balanced */}
                 <div className="flex items-center space-x-4">
-                    {subscription && (
-                        <div className="hidden md:flex items-center space-x-2 px-3 py-1.5 bg-green-100 text-green-800 rounded-full text-sm font-medium">
-                            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                            <span>
-                                {subscription.status === 'trialing' ? 'Free Trial' : 'Active'}
-                            </span>
-                        </div>
-                    )}
-                    {currentUser && (
-                        <div className="flex items-center space-x-2">
-                            <div className="w-8 h-8 bg-gradient-to-br from-slate-600 to-blue-600 rounded-full flex items-center justify-center">
-                                <span className="text-white font-bold text-sm">
-                                    {currentUser.displayName?.[0] || currentUser.email?.[0] || 'U'}
-                                </span>
-                            </div>
-                        </div>
-                    )}
+                    {/* User info removed - already shown in sidebar */}
                 </div>
             </div>
         </header>

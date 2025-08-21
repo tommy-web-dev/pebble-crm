@@ -1,8 +1,7 @@
-import React, { ReactNode, useEffect } from 'react';
+import React, { ReactNode } from 'react';
 import { create } from 'zustand';
 import { Contact, Deal, Task, Tag, Interaction } from '../types';
-import { getContacts, getDeals, getTasks, getTags, subscribeToContacts, subscribeToDeals, subscribeToTasks } from '../utils/firebase';
-import { useAuth } from './AuthContext';
+import { getContacts, getDeals, getTasks, getTags, getAllInteractionsForUser, subscribeToContacts, subscribeToDeals, subscribeToTasks } from '../utils/firebase';
 
 interface AppState {
     sidebarOpen: boolean;
@@ -135,14 +134,15 @@ export const useAppStore = create<AppState>((set) => ({
         set({ loading: true });
         try {
             // Load initial data
-            const [contacts, deals, tasks, tags] = await Promise.all([
+            const [contacts, deals, tasks, tags, interactions] = await Promise.all([
                 getContacts(userId),
                 getDeals(userId),
                 getTasks(userId),
-                getTags(userId)
+                getTags(userId),
+                getAllInteractionsForUser(userId)
             ]);
 
-            set({ contacts, deals, tasks, tags, loading: false });
+            set({ contacts, deals, tasks, tags, interactions, loading: false });
 
             // Set up real-time subscriptions
             subscribeToContacts(userId, (contacts) => {

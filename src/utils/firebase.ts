@@ -16,6 +16,24 @@ import {
 import { db } from '../config/firebase';
 import { Contact, Deal, Task, Tag, Interaction } from '../types';
 
+// Define Candidate interface here since it's not in types/index.ts yet
+interface Candidate {
+    id: string;
+    userId: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone?: string;
+    type?: 'permanent' | 'contract';
+    skills?: string[];
+    expectedSalary?: number;
+    cv?: string;
+    assignedJobId?: string;
+    candidateStage?: 'applied' | 'interview' | 'rejected' | 'offered' | 'placed';
+    createdAt: Date;
+    updatedAt: Date;
+}
+
 // Helper function to convert Firestore timestamps to Date objects
 const convertTimestamps = (data: any) => {
     const converted = { ...data };
@@ -33,6 +51,9 @@ const convertTimestamps = (data: any) => {
     }
     if (converted.date && converted.date instanceof Timestamp) {
         converted.date = converted.date.toDate();
+    }
+    if (converted.startDate && converted.startDate instanceof Timestamp) {
+        converted.startDate = converted.startDate.toDate();
     }
     return converted;
 };
@@ -191,6 +212,9 @@ export const testDirectFirestore = async (userId: string) => {
 // Contacts
 export const contactsCollection = collection(db, 'contacts');
 
+// Candidates
+export const candidatesCollection = collection(db, 'candidates');
+
 export const addContact = async (contact: Omit<Contact, 'id' | 'createdAt' | 'updatedAt'>) => {
     try {
         console.log('=== ADD CONTACT DEBUG START ===');
@@ -348,6 +372,109 @@ export const getContacts = async (userId: string) => {
             code: error.code,
             message: error.message
         });
+        throw error;
+    }
+};
+
+// Candidates
+export const addCandidate = async (candidate: Omit<Candidate, 'id' | 'createdAt' | 'updatedAt'>) => {
+    try {
+        console.log('=== ADD CANDIDATE DEBUG START ===');
+        console.log('Input candidate data:', candidate);
+
+        // Filter out undefined values as Firestore doesn't support them
+        const cleanCandidate = Object.fromEntries(
+            Object.entries(candidate).filter(([_, value]) => value !== undefined)
+        );
+
+        console.log('Cleaned candidate data for Firestore:', cleanCandidate);
+
+        // Create the document data with Firestore timestamps
+        const docData = {
+            ...cleanCandidate,
+            createdAt: Timestamp.now(),
+            updatedAt: Timestamp.now(),
+        };
+
+        console.log('Final document data for Firestore:', docData);
+        const docRef = await addDoc(candidatesCollection, docData);
+        console.log('addDoc successful! Document ID:', docRef.id);
+
+        // Return the complete candidate object with JavaScript Date objects
+        const newCandidate: Candidate = {
+            id: docRef.id,
+            ...candidate,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        };
+
+        console.log('Candidate added successfully:', newCandidate);
+        console.log('=== ADD CANDIDATE DEBUG END ===');
+        return newCandidate;
+    } catch (error) {
+        console.error('=== ADD CANDIDATE ERROR ===');
+        console.error('Error adding candidate to Firestore:', error);
+        throw error;
+    }
+};
+
+export const updateCandidate = async (id: string, updates: Partial<Candidate>) => {
+    try {
+        // Filter out undefined values as Firestore doesn't support them
+        const cleanUpdates = Object.fromEntries(
+            Object.entries(updates).filter(([_, value]) => value !== undefined)
+        );
+
+        // Create the update data with Firestore timestamp
+        const updateData = {
+            ...cleanUpdates,
+            updatedAt: Timestamp.now(),
+        };
+
+        const docRef = doc(db, 'candidates', id);
+        await updateDoc(docRef, updateData);
+
+        console.log('Candidate updated successfully');
+    } catch (error) {
+        console.error('Error updating candidate in Firestore:', error);
+        throw error;
+    }
+};
+
+export const deleteCandidate = async (id: string) => {
+    const docRef = doc(db, 'candidates', id);
+    await deleteDoc(docRef);
+};
+
+export const getCandidates = async (userId: string) => {
+    try {
+        console.log('getCandidates called for userId:', userId);
+
+        const q = query(
+            candidatesCollection,
+            where('userId', '==', userId)
+        );
+
+        const snapshot = await getDocs(q);
+        console.log('Candidates query successful, got', snapshot.docs.length, 'documents');
+
+        const candidates = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...convertTimestamps(doc.data())
+        })) as Candidate[];
+
+        // Sort by createdAt descending (newest first)
+        candidates.sort((a, b) => {
+            if (a.createdAt && b.createdAt) {
+                return b.createdAt.getTime() - a.createdAt.getTime();
+            }
+            return 0;
+        });
+
+        console.log('Returning', candidates.length, 'sorted candidates');
+        return candidates;
+    } catch (error: any) {
+        console.error('Error in getCandidates:', error);
         throw error;
     }
 };
@@ -630,6 +757,37 @@ export const getInteractions = async (contactId: string, userId: string) => {
         return interactions;
     } catch (error: any) {
         console.error('Error in getInteractions:', error);
+        throw error;
+    }
+};
+
+export const getAllInteractionsForUser = async (userId: string) => {
+    try {
+        console.log('getAllInteractionsForUser called for userId:', userId);
+
+        const q = query(
+            interactionsCollection,
+            where('userId', '==', userId)
+        );
+
+        const snapshot = await getDocs(q);
+        const interactions = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...convertTimestamps(doc.data())
+        })) as Interaction[];
+
+        // Sort by date descending (newest first)
+        interactions.sort((a, b) => {
+            if (a.date && b.date) {
+                return b.date.getTime() - a.date.getTime();
+            }
+            return 0;
+        });
+
+        console.log('Returning', interactions.length, 'total interactions for user');
+        return interactions;
+    } catch (error: any) {
+        console.error('Error in getAllInteractionsForUser:', error);
         throw error;
     }
 };

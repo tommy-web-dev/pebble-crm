@@ -1,41 +1,16 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { doc, setDoc } from 'firebase/firestore';
-import { db } from '../config/firebase';
 
 const Upgrade: React.FC = () => {
     const { currentUser } = useAuth();
 
     const handleStartTrial = () => {
         // Go directly to Stripe Payment Link
-        window.location.href = 'https://buy.stripe.com/3cI7sM6A6gho26VgUefjG00';
+        window.location.href = 'https://buy.stripe.com/28E9AUcYu3uC8vjavQfjG01';
     };
 
-    const handleCreateUserDocument = async () => {
-        if (!currentUser) return;
 
-        try {
-            await setDoc(doc(db, 'users', currentUser.uid), {
-                uid: currentUser.uid,
-                email: currentUser.email,
-                displayName: currentUser.displayName,
-                photoURL: currentUser.photoURL,
-                createdAt: new Date(),
-                updatedAt: new Date(),
-                subscription: null
-            });
-
-            alert('User document created! Now redirecting to payment...');
-            // Redirect to Stripe Payment Link
-            setTimeout(() => {
-                window.location.href = 'https://buy.stripe.com/3cI7sM6A6gho26VgUefjG00';
-            }, 1000);
-        } catch (error) {
-            console.error('Error creating user document:', error);
-            alert('Error creating user document. Please try again.');
-        }
-    };
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center px-4">
@@ -82,10 +57,10 @@ const Upgrade: React.FC = () => {
 
                     <div className="mb-6">
                         <div className="text-4xl font-bold text-slate-900 mb-2">
-                            £5<span className="text-lg text-slate-500">/month</span>
+                            £9<span className="text-lg text-slate-500">/month</span>
                         </div>
                         <p className="text-slate-600">
-                            Start with a <strong>7-day free trial</strong>
+                            Start with a <strong>30-day free trial</strong>
                         </p>
                     </div>
 
@@ -141,18 +116,7 @@ const Upgrade: React.FC = () => {
                         </a>
                     </p>
 
-                    {/* Manual User Document Creation */}
-                    <div className="border-t border-slate-200 pt-4">
-                        <p className="text-sm text-slate-600 mb-2">
-                            Having trouble? Try manually creating your user profile:
-                        </p>
-                        <button
-                            onClick={handleCreateUserDocument}
-                            className="px-4 py-2 bg-slate-600 text-white text-sm font-medium rounded-lg hover:bg-slate-700 transition-colors duration-200"
-                        >
-                            Create Profile & Continue to Payment
-                        </button>
-                    </div>
+
                 </div>
             </div>
         </div>

@@ -46,7 +46,7 @@ const Landing: React.FC = () => {
         } else if (currentUser) {
             // User is logged in but no subscription, go directly to Stripe Payment Link
             console.log('User logged in but no subscription, going to Stripe Payment Link');
-            window.location.href = 'https://buy.stripe.com/3cI7sM6A6gho26VgUefjG00';
+            window.location.href = 'https://buy.stripe.com/28E9AUcYu3uC8vjavQfjG01';
         } else {
             // User not logged in, go to signup page
             console.log('User not logged in, going to signup page');
@@ -73,8 +73,8 @@ const Landing: React.FC = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
             ),
-            title: "Smart Contact Management",
-            description: "Organize your business relationships with intelligent tagging, notes, and interaction history.",
+            title: "Smart Client Management",
+            description: "Organise your client relationships with intelligent tagging, notes, and interaction history.",
             color: "from-blue-500 to-blue-600"
         },
         {
@@ -83,8 +83,8 @@ const Landing: React.FC = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                 </svg>
             ),
-            title: "Pipeline Tracking",
-            description: "Visualize your sales process with our intuitive Kanban board for opportunity management.",
+            title: "Intelligent Job Tracking",
+            description: "Visualise your recruitment process with our intuitive job board and management system.",
             color: "from-emerald-500 to-emerald-600"
         },
         {
@@ -93,8 +93,8 @@ const Landing: React.FC = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                 </svg>
             ),
-            title: "Task Management",
-            description: "Stay organized with follow-up reminders, task tracking, and deadline management.",
+            title: "Candidate Database",
+            description: "Build and manage your candidate database with comprehensive profiles and tracking.",
             color: "from-amber-500 to-amber-600"
         },
         {
@@ -179,24 +179,7 @@ const Landing: React.FC = () => {
         }
     ];
 
-    const faqs = [
-        {
-            question: "Can I import my existing contacts?",
-            answer: "No, this is not possible in the current version, but is one of our priority features to implement as we continue to develop Pebble."
-        },
-        {
-            question: "Is my data secure?",
-            answer: "Security is our top priority. We use enterprise-grade encryption, regular backups, and comply with industry security standards."
-        },
-        {
-            question: "Can I cancel anytime?",
-            answer: "Yes, you can cancel your subscription at any time. There are no long-term contracts or hidden fees."
-        },
-        {
-            question: "What kind of support do you provide?",
-            answer: "We offer email support for all users via our Support email - support@pebblecrm.app. We aim to respond within 48 hours."
-        }
-    ];
+
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
@@ -273,15 +256,15 @@ const Landing: React.FC = () => {
                     </div>
 
                     <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold bg-gradient-to-r from-slate-900 via-blue-900 to-slate-900 bg-clip-text text-transparent mb-6 leading-tight">
-                        The CRM Built for
+                        The CRM Built For
                         <span className="block bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                            Solo Professionals
+                            Solo Recruiters & Small Firms
                         </span>
                     </h1>
 
                     <p className="text-xl md:text-2xl text-slate-600 mb-8 max-w-3xl mx-auto leading-relaxed">
-                        Lightweight, modern, and designed specifically for freelancers and independent consultants.
-                        Start with a 7-day free trial and manage your business relationships without the complexity.
+                        Lightweight, modern, and designed specifically for solo Recruiters and small firms.
+                        Start with a 30-day free trial and manage your Recruitment business without the complexity.
                     </p>
 
                     <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4 mb-12">
@@ -311,7 +294,7 @@ const Landing: React.FC = () => {
                                     </div>
                                 ))}
                             </div>
-                            <span>Join other Solo Professionals and Freelancers using Pebble!</span>
+                            <span>Join other solo recruiters and small firms using Pebble!</span>
                         </div>
                     </div>
                 </div>
@@ -359,7 +342,7 @@ const Landing: React.FC = () => {
                 <div className="max-w-7xl mx-auto">
                     <div className="text-center mb-16">
                         <h2 className="text-4xl md:text-5xl font-bold text-slate-900 mb-6">
-                            Everything You Need, Nothing You Don't
+                            Everything You Need, Simplified.
                         </h2>
                         <p className="text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
                             Pebble combines powerful CRM functionality with elegant simplicity,
@@ -398,7 +381,7 @@ const Landing: React.FC = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         {[
                             { step: 1, title: "Start Free Trial", description: "Create your account in seconds", icon: "🚀" },
-                            { step: 2, title: "Build Your Business!", description: "Begin adding contacts, managing tasks, and tracking opportunities!", icon: "📈" }
+                            { step: 2, title: "Build Your Business!", description: "Begin adding clients, candidates, and job opportunities!", icon: "📈" }
                         ].map((item, index) => (
                             <div key={index} className="text-center group">
                                 <div className="relative">
@@ -423,7 +406,7 @@ const Landing: React.FC = () => {
                             Simple, Transparent Pricing
                         </h2>
                         <p className="text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
-                            Start with a 7-day free trial. No commitment, cancel anytime.
+                            Start with a 30-day free trial. No commitment, cancel anytime.
                         </p>
 
 
@@ -443,7 +426,7 @@ const Landing: React.FC = () => {
 
                                 <div className="mb-8">
                                     <span className="text-4xl font-bold text-slate-900">
-                                        £5
+                                        £9
                                     </span>
                                     <span className="text-slate-600">
                                         /month
@@ -452,11 +435,11 @@ const Landing: React.FC = () => {
 
                                 <ul className="space-y-3 mb-8 text-left">
                                     {[
-                                        "Unlimited contacts",
-                                        "Advanced pipeline analytics",
-                                        "Custom tags & categories",
+                                        "Unlimited Client records",
+                                        "Unlimited Candidate profiles",
+                                        "Unlimited Job listings",
                                         "Interaction history",
-                                        "Priority support",
+                                        "Priority Support",
                                         "Mobile responsive",
                                         "Real-time dashboard"
                                     ].map((feature, featureIndex) => (
@@ -481,25 +464,20 @@ const Landing: React.FC = () => {
                 </div>
             </section>
 
-            {/* FAQ Section */}
-            <section id="faq" className="py-20 px-4 sm:px-6 lg:px-8">
+            {/* Support Section */}
+            <section id="support" className="py-20 px-4 sm:px-6 lg:px-8">
                 <div className="max-w-4xl mx-auto">
                     <div className="text-center mb-16">
                         <h2 className="text-4xl md:text-5xl font-bold text-slate-900 mb-6">
-                            Frequently Asked Questions
+                            Support
                         </h2>
                         <p className="text-xl text-slate-600">
-                            Everything you need to know about Pebble
+                            For all support queries and general questions, email{' '}
+                            <a href="mailto:support@pebblecrm.app" className="text-blue-600 hover:text-blue-800 underline font-medium">
+                                support@pebblecrm.app
+                            </a>
+                            {' '}and we will get back to you as soon as possible, within 48 hours.
                         </p>
-                    </div>
-
-                    <div className="space-y-6">
-                        {faqs.map((faq, index) => (
-                            <div key={index} className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-8 hover:shadow-lg transition-all duration-200">
-                                <h3 className="text-lg font-semibold text-slate-900 mb-3">{faq.question}</h3>
-                                <p className="text-slate-600 leading-relaxed">{faq.answer}</p>
-                            </div>
-                        ))}
                     </div>
                 </div>
             </section>
@@ -512,7 +490,7 @@ const Landing: React.FC = () => {
                         Ready to start building your business?
                     </h2>
                     <p className="text-xl text-slate-200 mb-8 leading-relaxed">
-                        Join other Solo Professionals & Freelancers using Pebble.
+                        Join other Solo Recruiters & small firms using Pebble.
                     </p>
                     <button
                         onClick={handleStartFreeTrial}
@@ -535,7 +513,7 @@ const Landing: React.FC = () => {
                                 <span className="text-2xl font-bold text-white">Pebble</span>
                             </div>
                             <p className="text-slate-300 max-w-md leading-relaxed">
-                                The modern CRM built for Solo Professionals and Freelancers. Simple, powerful, and designed to help you grow your business.
+                                The modern CRM built for Solo Recruiters & small firms. Simple, powerful, and designed to help you grow your business.
                             </p>
                         </div>
                         {/* Social & Product */}
@@ -585,11 +563,11 @@ const Landing: React.FC = () => {
                                 <li>
                                     <button
                                         onClick={() => {
-                                            document.getElementById('faq')?.scrollIntoView({ behavior: 'smooth' });
+                                            document.getElementById('support')?.scrollIntoView({ behavior: 'smooth' });
                                         }}
                                         className="text-slate-300 hover:text-white transition-colors duration-200"
                                     >
-                                        FAQ
+                                        Support
                                     </button>
                                 </li>
                             </ul>

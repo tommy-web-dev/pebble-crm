@@ -21,14 +21,7 @@
             "src": "api/get-subscription.js",
             "use": "@vercel/node"
         },
-        {
-            "src": "api/test-firebase.js",
-            "use": "@vercel/node"
-        },
-        {
-            "src": "api/test-simple.js",
-            "use": "@vercel/node"
-        },
+
         {
             "src": "package.json",
             "use": "@vercel/static-build",
@@ -58,14 +51,7 @@
             "source": "/api/get-subscription",
             "destination": "/api/get-subscription.js"
         },
-        {
-            "source": "/api/test-firebase",
-            "destination": "/api/test-firebase.js"
-        },
-        {
-            "source": "/api/test-simple",
-            "destination": "/api/test-simple.js"
-        },
+
         {
             "source": "/(.*)",
             "destination": "/index.html"

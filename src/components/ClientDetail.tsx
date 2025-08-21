@@ -1,23 +1,24 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useAppStore } from '../contexts/AppContext';
 import { useSettings } from '../contexts/SettingsContext';
-import { Contact, Deal, Interaction } from '../types';
+import { Contact } from '../types';
 
 interface ClientDetailProps {
     contact: Contact;
     onClose: () => void;
     onEdit: () => void;
     onDelete: () => void;
+    onNavigateToJob?: (jobId: string) => void;
 }
 
-const ClientDetail: React.FC<ClientDetailProps> = ({ contact, onClose, onEdit, onDelete }) => {
+const ClientDetail: React.FC<ClientDetailProps> = ({ contact, onClose, onEdit, onDelete, onNavigateToJob }) => {
     const { deals, interactions } = useAppStore();
     const { formatPhoneNumber, formatCurrency } = useSettings();
     const [activeTab, setActiveTab] = useState<'overview' | 'jobs' | 'interactions'>('overview');
 
     // Filter deals for this client
     const clientJobs = useMemo(() => {
-        return deals.filter(deal => deal.clientId === contact.id);
+        return deals.filter(deal => deal.contactId === contact.id);
     }, [deals, contact.id]);
 
     // Filter interactions for this client
@@ -29,12 +30,26 @@ const ClientDetail: React.FC<ClientDetailProps> = ({ contact, onClose, onEdit, o
     const clientMetrics = useMemo(() => {
         const totalJobs = clientJobs.length;
         const activeJobs = clientJobs.filter(job =>
-            !['closed-won', 'closed-lost'].includes(job.stage)
+            !['placed'].includes(job.stage)
         ).length;
-        const totalValue = clientJobs.reduce((sum, job) => sum + job.value, 0);
+
+        // Calculate total fee value (not salary)
+        const totalValue = clientJobs.reduce((sum, job) => {
+            const fee = job.value && (job as any).feePercentage
+                ? (job.value * (job as any).feePercentage / 100)
+                : 0;
+            return sum + fee;
+        }, 0);
+
+        // Calculate won fee value for placed jobs
         const wonValue = clientJobs
-            .filter(job => job.stage === 'closed-won')
-            .reduce((sum, job) => sum + job.value, 0);
+            .filter(job => job.stage === 'placed')
+            .reduce((sum, job) => {
+                const fee = job.value && (job as any).feePercentage
+                    ? (job.value * (job as any).feePercentage / 100)
+                    : 0;
+                return sum + fee;
+            }, 0);
 
         return { totalJobs, activeJobs, totalValue, wonValue };
     }, [clientJobs]);
@@ -53,10 +68,11 @@ const ClientDetail: React.FC<ClientDetailProps> = ({ contact, onClose, onEdit, o
     const getStageColor = (stage: string) => {
         switch (stage) {
             case 'lead': return 'bg-slate-100 text-slate-800';
-            case 'negotiating': return 'bg-blue-100 text-blue-800';
             case 'live-opportunity': return 'bg-emerald-100 text-emerald-800';
-            case 'closed-won': return 'bg-green-100 text-green-800';
-            case 'closed-lost': return 'bg-red-100 text-red-800';
+            case 'shortlist-sent': return 'bg-yellow-100 text-yellow-800';
+            case 'interview': return 'bg-orange-100 text-orange-800';
+            case 'offer': return 'bg-purple-100 text-purple-800';
+            case 'placed': return 'bg-green-100 text-green-800';
             default: return 'bg-gray-100 text-gray-800';
         }
     };
@@ -64,10 +80,11 @@ const ClientDetail: React.FC<ClientDetailProps> = ({ contact, onClose, onEdit, o
     const getStageName = (stage: string) => {
         switch (stage) {
             case 'lead': return 'Lead';
-            case 'negotiating': return 'Negotiating';
-            case 'live-opportunity': return 'Live Opportunity';
-            case 'closed-won': return 'Closed Won';
-            case 'closed-lost': return 'Closed Lost';
+            case 'live-opportunity': return 'Live Job';
+            case 'shortlist-sent': return 'Shortlist Sent';
+            case 'interview': return 'Interview';
+            case 'offer': return 'Offer';
+            case 'placed': return 'Placed';
             default: return stage;
         }
     };
@@ -79,7 +96,22 @@ const ClientDetail: React.FC<ClientDetailProps> = ({ contact, onClose, onEdit, o
             case 'email': return '📧';
             case 'note': return '📝';
             case 'follow-up': return '⏰';
+            case 'proposal': return '📄';
+            case 'other': return '📋';
             default: return '📋';
+        }
+    };
+
+    const formatInteractionType = (type: string) => {
+        switch (type) {
+            case 'call': return 'Phone Call';
+            case 'meeting': return 'Meeting';
+            case 'email': return 'Email';
+            case 'note': return 'Note';
+            case 'follow-up': return 'Follow Up';
+            case 'proposal': return 'Proposal Sent';
+            case 'other': return 'Other';
+            default: return type;
         }
     };
 
@@ -132,8 +164,8 @@ const ClientDetail: React.FC<ClientDetailProps> = ({ contact, onClose, onEdit, o
                     <button
                         onClick={() => setActiveTab('overview')}
                         className={`px-6 py-3 font-medium transition-colors ${activeTab === 'overview'
-                                ? 'text-blue-600 border-b-2 border-blue-600'
-                                : 'text-slate-500 hover:text-slate-700'
+                            ? 'text-blue-600 border-b-2 border-blue-600'
+                            : 'text-slate-500 hover:text-slate-700'
                             }`}
                     >
                         Overview
@@ -141,8 +173,8 @@ const ClientDetail: React.FC<ClientDetailProps> = ({ contact, onClose, onEdit, o
                     <button
                         onClick={() => setActiveTab('jobs')}
                         className={`px-6 py-3 font-medium transition-colors ${activeTab === 'jobs'
-                                ? 'text-blue-600 border-b-2 border-blue-600'
-                                : 'text-slate-500 hover:text-slate-700'
+                            ? 'text-blue-600 border-b-2 border-blue-600'
+                            : 'text-slate-500 hover:text-slate-700'
                             }`}
                     >
                         Jobs ({clientJobs.length})
@@ -150,8 +182,8 @@ const ClientDetail: React.FC<ClientDetailProps> = ({ contact, onClose, onEdit, o
                     <button
                         onClick={() => setActiveTab('interactions')}
                         className={`px-6 py-3 font-medium transition-colors ${activeTab === 'interactions'
-                                ? 'text-blue-600 border-b-2 border-blue-600'
-                                : 'text-slate-500 hover:text-slate-700'
+                            ? 'text-blue-600 border-b-2 border-blue-600'
+                            : 'text-slate-500 hover:text-slate-700'
                             }`}
                     >
                         Interactions ({clientInteractions.length})
@@ -188,7 +220,16 @@ const ClientDetail: React.FC<ClientDetailProps> = ({ contact, onClose, onEdit, o
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
                                         <p className="text-sm text-slate-500">Email</p>
-                                        <p className="font-medium">{contact.email || 'No email'}</p>
+                                        {contact.email ? (
+                                            <a
+                                                href={`mailto:${contact.email}`}
+                                                className="font-medium text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                                            >
+                                                {contact.email}
+                                            </a>
+                                        ) : (
+                                            <p className="font-medium">No email</p>
+                                        )}
                                     </div>
                                     <div>
                                         <p className="text-sm text-slate-500">Phone</p>
@@ -254,7 +295,16 @@ const ClientDetail: React.FC<ClientDetailProps> = ({ contact, onClose, onEdit, o
                                             {clientJobs.map((job) => (
                                                 <tr key={job.id} className="hover:bg-slate-50">
                                                     <td className="px-6 py-4 whitespace-nowrap">
-                                                        <div className="text-sm font-medium text-slate-900">{job.title}</div>
+                                                        {onNavigateToJob ? (
+                                                            <button
+                                                                onClick={() => onNavigateToJob(job.id)}
+                                                                className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline transition-colors cursor-pointer text-left"
+                                                            >
+                                                                {job.title}
+                                                            </button>
+                                                        ) : (
+                                                            <div className="text-sm font-medium text-slate-900">{job.title}</div>
+                                                        )}
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap">
                                                         <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStageColor(job.stage)}`}>
@@ -308,7 +358,7 @@ const ClientDetail: React.FC<ClientDetailProps> = ({ contact, onClose, onEdit, o
                                                             <div className="flex items-center space-x-2">
                                                                 <span className="text-lg">{getInteractionTypeIcon(interaction.type)}</span>
                                                                 <span className="text-sm font-medium text-slate-900 capitalize">
-                                                                    {interaction.type}
+                                                                    {formatInteractionType(interaction.type)}
                                                                 </span>
                                                             </div>
                                                         </td>

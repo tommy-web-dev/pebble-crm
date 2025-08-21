@@ -1,17 +1,25 @@
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
 const Terms: React.FC = () => {
+    // Scroll to top when component mounts
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, []);
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
             {/* Navigation Header */}
             <nav className="bg-white/95 backdrop-blur-md border-b border-slate-200/50 shadow-sm">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16">
-                        <Link to="/" className="flex items-center space-x-3">
-                            <div className="w-8 h-8 bg-gradient-to-br from-slate-600 to-blue-500 rounded-lg flex items-center justify-center">
+                        <Link to="/" className="flex items-center space-x-3 hover:opacity-80 transition-opacity duration-200">
+                            <div className="w-8 h-8 bg-gradient-to-br from-slate-700 to-blue-600 rounded-lg flex items-center justify-center shadow-lg">
                                 <span className="text-white font-bold text-lg">P</span>
                             </div>
-                            <span className="text-2xl font-bold text-slate-900">Pebble</span>
+                            <span className="text-xl font-bold bg-gradient-to-r from-slate-700 to-blue-600 bg-clip-text text-transparent">
+                                Pebble
+                            </span>
                         </Link>
                         <Link
                             to="/login"
@@ -49,12 +57,12 @@ const Terms: React.FC = () => {
                             <section>
                                 <h2 className="text-2xl font-bold text-slate-900 mb-4">Service Description</h2>
                                 <p className="text-slate-700 leading-relaxed mb-4">
-                                    Pebble CRM is a Customer Relationship Management service designed for solo professionals and freelancers. Our Service includes:
+                                    Pebble CRM is a Recruitment Customer Relationship Management service designed for solo recruiters and small firms. Our Service includes:
                                 </p>
                                 <ul className="list-disc list-inside text-slate-700 space-y-2 ml-4">
-                                    <li>Contact management and organization</li>
-                                    <li>Pipeline and opportunity tracking</li>
-                                    <li>Task and follow-up management</li>
+                                    <li>Client management and organization</li>
+                                    <li>Job pipeline and opportunity tracking</li>
+                                    <li>Candidate database and management</li>
                                     <li>Dashboard analytics and reporting</li>
                                     <li>Mobile-responsive web application</li>
                                 </ul>
@@ -63,15 +71,15 @@ const Terms: React.FC = () => {
                             {/* Subscription and Payment */}
                             <section>
                                 <h2 className="text-2xl font-bold text-slate-900 mb-4">Subscription and Payment Terms</h2>
-                                
+
                                 <h3 className="text-xl font-semibold text-slate-800 mb-3">Free Trial</h3>
                                 <p className="text-slate-700 leading-relaxed mb-4">
-                                    We offer a 7-day free trial for new users. During the trial period, you have full access to all features of the Professional Plan.
+                                    We offer a 30-day free trial for new users. During the trial period, you have full access to all features of the Professional Plan.
                                 </p>
 
                                 <h3 className="text-xl font-semibold text-slate-800 mb-3">Subscription Plans</h3>
                                 <p className="text-slate-700 leading-relaxed mb-4">
-                                    After the trial period, you will be automatically charged for the Professional Plan at £19/month unless you cancel before the trial ends.
+                                    After the trial period, you will be automatically charged for the Professional Plan at £9/month unless you cancel before the trial ends.
                                 </p>
 
                                 <h3 className="text-xl font-semibold text-slate-800 mb-3">Payment Processing</h3>

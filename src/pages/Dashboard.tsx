@@ -54,30 +54,37 @@ const Dashboard: React.FC = () => {
         // Count live jobs (opportunities that are not closed)
         const normalizeStage = (stage: string) => {
             const stageLower = stage.toLowerCase();
-            if (stageLower.includes('negotiat')) return 'negotiating';
             if (stageLower.includes('lead')) return 'lead';
             if (stageLower.includes('live') || stageLower.includes('opportunity')) return 'live-opportunity';
-            if (stageLower.includes('closed') && stageLower.includes('won')) return 'closed-won';
-            if (stageLower.includes('closed') && stageLower.includes('lost')) return 'closed-lost';
+            if (stageLower.includes('shortlist')) return 'shortlist-sent';
+            if (stageLower.includes('interview')) return 'interview';
+            if (stageLower.includes('offer')) return 'offer';
+            if (stageLower.includes('placed')) return 'placed';
             return stage;
         };
 
         const liveJobs = deals.filter(deal => {
             const normalizedStage = normalizeStage(deal.stage);
-            return normalizedStage !== 'closed-won' && normalizedStage !== 'closed-lost';
+            return normalizedStage !== 'placed';
         }).length;
 
         const placements = deals.filter(deal => {
             const normalizedStage = normalizeStage(deal.stage);
-            return normalizedStage === 'closed-won';
+            return normalizedStage === 'placed';
         }).length;
 
         const totalRevenue = deals
             .filter(deal => {
                 const normalizedStage = normalizeStage(deal.stage);
-                return normalizedStage === 'closed-won';
+                return normalizedStage === 'placed';
             })
-            .reduce((sum, deal) => sum + deal.value, 0);
+            .reduce((sum, deal) => {
+                // Calculate fee based on value and fee percentage
+                const fee = deal.value && deal.feePercentage
+                    ? (deal.value * deal.feePercentage / 100)
+                    : 0;
+                return sum + fee;
+            }, 0);
 
         return {
             totalClients,
@@ -93,7 +100,7 @@ const Dashboard: React.FC = () => {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+            <div className="max-w-none mx-auto px-8 sm:px-12 lg:px-16 py-8 space-y-8">
                 {/* Header */}
                 <div className="mb-8">
                     <h1 className="text-4xl font-bold text-slate-900 mb-3">KPI Dashboard</h1>
@@ -113,7 +120,7 @@ const Dashboard: React.FC = () => {
                     </button>
 
                     <button
-                        onClick={() => navigate('/pipeline')}
+                        onClick={() => navigate('/jobs')}
                         className="group inline-flex items-center px-5 py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white text-sm font-semibold rounded-xl hover:from-purple-700 hover:to-purple-800 focus:ring-4 focus:ring-purple-500/20 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
                     >
                         <svg className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -121,9 +128,19 @@ const Dashboard: React.FC = () => {
                         </svg>
                         Add Job Order
                     </button>
+
+                    <button
+                        onClick={() => navigate('/candidates')}
+                        className="group inline-flex items-center px-5 py-3 bg-gradient-to-r from-orange-600 to-orange-700 text-white text-sm font-semibold rounded-xl hover:from-orange-700 hover:to-orange-800 focus:ring-4 focus:ring-orange-500/20 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                    >
+                        <svg className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                        Add Candidate
+                    </button>
                 </div>
 
-                {/* Key Metrics Cards - Optimized for 4 cards */}
+                                    {/* Key Metrics Cards - Optimised for 4 cards */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     {/* Clients Card */}
                     <div className="group bg-white rounded-2xl shadow-lg border border-slate-200 p-5 hover:shadow-xl transition-all duration-300 transform hover:scale-105 cursor-pointer" onClick={() => navigate('/contacts')}>
@@ -150,7 +167,7 @@ const Dashboard: React.FC = () => {
                     </div>
 
                     {/* Jobs Card */}
-                    <div className="group bg-white rounded-2xl shadow-lg border border-slate-200 p-5 hover:shadow-xl transition-all duration-300 transform hover:scale-105 cursor-pointer" onClick={() => navigate('/pipeline')}>
+                    <div className="group bg-white rounded-2xl shadow-lg border border-slate-200 p-5 hover:shadow-xl transition-all duration-300 transform hover:scale-105 cursor-pointer" onClick={() => navigate('/jobs')}>
                         <div className="flex items-center justify-between mb-3">
                             <div className="p-2.5 bg-gradient-to-br from-purple-100 to-purple-200 rounded-xl">
                                 <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -174,7 +191,7 @@ const Dashboard: React.FC = () => {
                     </div>
 
                     {/* Placements Card */}
-                    <div className="group bg-white rounded-2xl shadow-lg border border-slate-200 p-5 hover:shadow-xl transition-all duration-300 transform hover:scale-105 cursor-pointer" onClick={() => navigate('/pipeline')}>
+                    <div className="group bg-white rounded-2xl shadow-lg border border-slate-200 p-5 hover:shadow-xl transition-all duration-300 transform hover:scale-105 cursor-pointer" onClick={() => navigate('/jobs')}>
                         <div className="flex items-center justify-between mb-3">
                             <div className="p-2.5 bg-gradient-to-br from-green-100 to-green-200 rounded-xl">
                                 <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -198,7 +215,7 @@ const Dashboard: React.FC = () => {
                     </div>
 
                     {/* Total Revenue Card */}
-                    <div className="group bg-white rounded-2xl shadow-lg border border-slate-200 p-5 hover:shadow-xl transition-all duration-300 transform hover:scale-105 cursor-pointer" onClick={() => navigate('/pipeline')}>
+                    <div className="group bg-white rounded-2xl shadow-lg border border-slate-200 p-5 hover:shadow-xl transition-all duration-300 transform hover:scale-105 cursor-pointer" onClick={() => navigate('/jobs')}>
                         <div className="flex items-center justify-between mb-3">
                             <div className="p-2.5 bg-gradient-to-br from-amber-100 to-amber-200 rounded-xl">
                                 <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -212,7 +229,7 @@ const Dashboard: React.FC = () => {
                         <div className="mb-2">
                             <p className="text-2xl font-bold text-slate-900">{formatCurrency(metrics.totalRevenue)}</p>
                         </div>
-                        <p className="text-sm font-medium text-slate-600">Revenue</p>
+                        <p className="text-sm font-medium text-slate-600">Total Fees</p>
                         <div className="mt-3 flex items-center text-xs text-slate-500">
                             <span>Click to view</span>
                             <svg className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -265,51 +282,7 @@ const Dashboard: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Revenue Section */}
-                <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-8">
-                    <div className="flex items-center justify-between mb-6">
-                        <div>
-                            <h2 className="text-2xl font-bold text-slate-900 mb-2">Revenue Overview</h2>
-                            <p className="text-slate-600">Track your placement revenue and billing performance</p>
-                        </div>
-                        <div className="text-right">
-                            <p className="text-sm text-slate-500">Total Revenue</p>
-                            <p className="text-3xl font-bold text-green-600">{formatCurrency(metrics.totalRevenue)}</p>
-                        </div>
-                    </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div className="text-center p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200">
-                            <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-3">
-                                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                                </svg>
-                            </div>
-                            <p className="text-sm font-medium text-slate-600 mb-1">Total Revenue</p>
-                            <p className="text-2xl font-bold text-green-600">{formatCurrency(metrics.totalRevenue)}</p>
-                        </div>
-
-                        <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200">
-                            <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-3">
-                                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                            </div>
-                            <p className="text-sm font-medium text-slate-600 mb-1">Successful Placements</p>
-                            <p className="text-2xl font-bold text-blue-600">{metrics.placements}</p>
-                        </div>
-
-                        <div className="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200">
-                            <div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center mx-auto mb-3">
-                                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M9 11h.01" />
-                                </svg>
-                            </div>
-                            <p className="text-sm font-medium text-slate-600 mb-1">Live Job Orders</p>
-                            <p className="text-2xl font-bold text-purple-600">{metrics.liveJobs}</p>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
     );
