@@ -36,7 +36,7 @@ const Landing: React.FC = () => {
     };
 
     // Smart "Start Free Trial" handler
-    const handleStartFreeTrial = () => {
+    const handleStartFreeTrial = async () => {
         console.log('handleStartFreeTrial called', { currentUser, subscription });
 
         if (currentUser && subscription && ['active', 'trialing'].includes(subscription.status)) {
@@ -44,9 +44,32 @@ const Landing: React.FC = () => {
             console.log('User has subscription, redirecting to dashboard');
             navigate('/dashboard');
         } else if (currentUser) {
-            // User is logged in but no subscription, go directly to Stripe Payment Link
-            console.log('User logged in but no subscription, going to Stripe Payment Link');
-            window.location.href = 'https://buy.stripe.com/28E9AUcYu3uC8vjavQfjG01';
+            // User is logged in but no subscription, create checkout session
+            console.log('User logged in but no subscription, creating checkout session');
+            try {
+                const response = await fetch('/api/create-checkout-session', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        userId: currentUser.uid,
+                        email: currentUser.email,
+                        displayName: currentUser.displayName
+                    }),
+                });
+
+                if (response.ok) {
+                    const { url } = await response.json();
+                    window.location.href = url;
+                } else {
+                    throw new Error('Failed to create checkout session');
+                }
+            } catch (error) {
+                console.error('Checkout session error:', error);
+                // Fallback to upgrade page
+                navigate('/upgrade');
+            }
         } else {
             // User not logged in, go to signup page
             console.log('User not logged in, going to signup page');

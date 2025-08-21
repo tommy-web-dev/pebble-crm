@@ -9,6 +9,7 @@ import Landing from './pages/Landing';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
 import Upgrade from './pages/Upgrade';
+import PaymentSuccess from './pages/PaymentSuccess';
 import Dashboard from './pages/Dashboard';
 import Contacts from './pages/Contacts';
 import Pipeline from './pages/Pipeline';
@@ -32,6 +33,7 @@ function App() {
                             <Route path="/privacy" element={<Privacy />} />
                             <Route path="/terms" element={<Terms />} />
                             <Route path="/upgrade" element={<Upgrade />} />
+                            <Route path="/payment-success" element={<PaymentSuccess />} />
                             <Route path="/login" element={<Login />} />
 
                             {/* Protected routes with Layout */}

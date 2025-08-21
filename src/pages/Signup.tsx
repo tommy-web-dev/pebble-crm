@@ -70,21 +70,41 @@ const Signup: React.FC = () => {
                 navigate('/upgrade');
             }, 10000); // 10 second timeout
 
-            // Wait a moment for Firebase auth to complete, then redirect
+            // Wait a moment for Firebase auth to complete, then create checkout session
             setTimeout(async () => {
                 try {
-                    console.log('Account created successfully! Redirecting to Stripe Payment Link...');
+                    console.log('Account created successfully! Creating Stripe checkout session...');
+                    
+                    // Create checkout session with user ID
+                    const response = await fetch('/api/create-checkout-session', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            userId: currentUser?.uid,
+                            email: formData.email,
+                            displayName: formData.displayName
+                        }),
+                    });
 
-                    // Go directly to Stripe Payment Link
-                    window.location.href = 'https://buy.stripe.com/28E9AUcYu3uC8vjavQfjG01';
-
-                    // Clear timeout if redirect succeeds
-                    clearTimeout(redirectTimeout);
+                    if (response.ok) {
+                        const { url } = await response.json();
+                        console.log('Checkout session created, redirecting to Stripe...');
+                        
+                        // Redirect to Stripe checkout
+                        window.location.href = url;
+                        
+                        // Clear timeout if redirect succeeds
+                        clearTimeout(redirectTimeout);
+                    } else {
+                        throw new Error('Failed to create checkout session');
+                    }
                 } catch (error) {
-                    console.error('Redirect error:', error);
+                    console.error('Checkout session error:', error);
                     // Clear timeout
                     clearTimeout(redirectTimeout);
-                    // If redirect fails, redirect to upgrade page as fallback
+                    // If checkout creation fails, redirect to upgrade page as fallback
                     setError('Redirecting to upgrade page...');
                     setTimeout(() => {
                         navigate('/upgrade');
