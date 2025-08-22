@@ -221,24 +221,36 @@ export const getSubscriptionStatus = async (userId: string): Promise<UserSubscri
                 const customerDoc = customerSnapshot.docs[0];
                 const customerData = customerDoc.data();
                 
-                if (customerData.subscriptions && customerData.subscriptions.length > 0) {
-                    const subscription = customerData.subscriptions[0];
-                    console.log(`Found subscription in customers collection:`, subscription);
+                // Check the subscriptions sub-collection (Firebase extension structure)
+                const subscriptionsRef = collection(db, 'customers', customerDoc.id, 'subscriptions');
+                const subscriptionsSnapshot = await getDocs(subscriptionsRef);
+                
+                if (!subscriptionsSnapshot.empty) {
+                    // Get the first active/trialing subscription
+                    const subscriptionDoc = subscriptionsSnapshot.docs.find(doc => {
+                        const data = doc.data();
+                        return ['active', 'trialing'].includes(data.status);
+                    });
                     
-                    // Convert Firebase extension format to your UserSubscription format
-                    const subscriptionData: UserSubscription = {
-                        stripeCustomerId: customerData.stripeCustomerId || userData.stripeCustomerId,
-                        stripeSubscriptionId: subscription.stripeSubscriptionId,
-                        status: subscription.status,
-                        planName: subscription.planName || 'Pebble CRM - Professional Plan',
-                        createdAt: subscription.createdAt?.toDate() || new Date(),
-                        updatedAt: subscription.updatedAt?.toDate() || new Date(),
-                        currentPeriodStart: subscription.currentPeriodStart?.toDate() || new Date(),
-                        currentPeriodEnd: subscription.currentPeriodEnd?.toDate() || new Date(),
-                        cancelAtPeriodEnd: subscription.cancelAtPeriodEnd || false
-                    };
-                    
-                    return subscriptionData;
+                    if (subscriptionDoc) {
+                        const subscription = subscriptionDoc.data();
+                        console.log(`Found subscription in customers sub-collection:`, subscription);
+                        
+                        // Convert Firebase extension format to your UserSubscription format
+                        const subscriptionData: UserSubscription = {
+                            stripeCustomerId: customerData.stripeId || customerData.stripeCustomerId,
+                            stripeSubscriptionId: subscription.id || subscription.stripeSubscriptionId,
+                            status: subscription.status,
+                            planName: subscription.planName || 'Pebble CRM - Professional Plan',
+                            createdAt: subscription.created_at?.toDate() || subscription.createdAt?.toDate() || new Date(),
+                            updatedAt: subscription.updated_at?.toDate() || subscription.updatedAt?.toDate() || new Date(),
+                            currentPeriodStart: subscription.current_period_start?.toDate() || subscription.currentPeriodStart?.toDate() || new Date(),
+                            currentPeriodEnd: subscription.current_period_end?.toDate() || subscription.currentPeriodEnd?.toDate() || new Date(),
+                            cancelAtPeriodEnd: subscription.cancel_at_period_end || subscription.cancelAtPeriodEnd || false
+                        };
+                        
+                        return subscriptionData;
+                    }
                 }
             }
         } catch (error) {
