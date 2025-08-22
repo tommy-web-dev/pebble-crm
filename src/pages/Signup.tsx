@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { checkExistingSubscription } from '../utils/stripe';
+import { app } from '../config/firebase';
 
 
 const Signup: React.FC = () => {
@@ -80,14 +81,14 @@ const Signup: React.FC = () => {
             // Create Stripe checkout session using Firebase extension
             try {
                 console.log('Account created successfully! Creating Stripe checkout session...');
-                
+
                 // Import Firebase functions dynamically
                 const { getFunctions, httpsCallable } = await import('firebase/functions');
-                const functions = getFunctions();
-                
+                const functions = getFunctions(app, 'us-central1');
+
                 // Call the Firebase extension function to create checkout session
                 const createCheckoutSession = httpsCallable(functions, 'ext-firestore-stripe-payments-createCheckoutSession');
-                
+
                 const result = await createCheckoutSession({
                     price: 'price_1RyXPmJp0yoFovcOJtEC5hyt', // Your actual Stripe price ID
                     success_url: `${window.location.origin}/dashboard`,
@@ -97,9 +98,9 @@ const Signup: React.FC = () => {
                         userId: userId
                     }
                 });
-                
+
                 console.log('Checkout session created:', result.data);
-                
+
                 // Redirect to Stripe checkout
                 const data = result.data as { url?: string };
                 if (data.url) {
@@ -107,7 +108,7 @@ const Signup: React.FC = () => {
                 } else {
                     throw new Error('No checkout URL received');
                 }
-                
+
             } catch (error) {
                 console.error('Checkout session error:', error);
                 setError('Failed to create checkout session. Redirecting to upgrade page...');

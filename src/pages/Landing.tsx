@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { getSubscriptionStatus } from '../utils/stripe';
 import { UserSubscription } from '../types';
+import { app } from '../config/firebase';
 
 const Landing: React.FC = () => {
     const { currentUser, logout } = useAuth();
@@ -50,7 +51,7 @@ const Landing: React.FC = () => {
             try {
                 // Import Firebase functions dynamically
                 const { getFunctions, httpsCallable } = await import('firebase/functions');
-                const functions = getFunctions();
+                const functions = getFunctions(app, 'us-central1');
                 
                 // Call the Firebase extension function to create checkout session
                 const createCheckoutSession = httpsCallable(functions, 'ext-firestore-stripe-payments-createCheckoutSession');

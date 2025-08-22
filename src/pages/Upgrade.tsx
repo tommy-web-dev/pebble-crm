@@ -1,15 +1,16 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { app } from '../config/firebase';
 
 const Upgrade: React.FC = () => {
     const { currentUser } = useAuth();
 
     const handleStartTrial = async () => {
         try {
-            // Import Firebase functions dynamically
-            const { getFunctions, httpsCallable } = await import('firebase/functions');
-            const functions = getFunctions();
+                            // Import Firebase functions dynamically
+                const { getFunctions, httpsCallable } = await import('firebase/functions');
+                const functions = getFunctions(app, 'us-central1');
             
             // Call the Firebase extension function to create checkout session
             const createCheckoutSession = httpsCallable(functions, 'ext-firestore-stripe-payments-createCheckoutSession');
