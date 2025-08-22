@@ -54,7 +54,7 @@ const Upgrade: React.FC = () => {
             setTimeout(() => {
                 unsubscribe();
                 alert('Checkout session creation timed out. Please try again.');
-            }, 30000); // 30 second timeout
+            }, 60000); // 60 second timeout - Firebase extension needs more time
 
         } catch (error) {
             console.error('Checkout session error:', error);

@@ -71,7 +71,7 @@ const Signup: React.FC = () => {
             // Show success message and wait a moment for Firebase auth to complete
             setError('');
             setLoading(false);
-            setError('Account created! Setting up your free trial...');
+            setError('Account created! Setting up your free trial... It may take up to 30 seconds for us to create your account. Do not refresh the page.');
 
             // Add delay to see console messages
             console.log('Waiting 5 seconds before redirect...');
@@ -127,7 +127,7 @@ const Signup: React.FC = () => {
                     setTimeout(() => {
                         navigate('/upgrade');
                     }, 2000);
-                }, 30000); // 30 second timeout
+                }, 60000); // 60 second timeout - Firebase extension needs more time
 
             } catch (error) {
                 console.error('Checkout session error:', error);

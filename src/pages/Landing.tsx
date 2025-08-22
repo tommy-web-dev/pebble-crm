@@ -93,7 +93,7 @@ const Landing: React.FC = () => {
                     unsubscribe();
                     // Fallback to upgrade page if checkout creation fails
                     navigate('/upgrade');
-                }, 30000); // 30 second timeout
+                }, 60000); // 60 second timeout - Firebase extension needs more time
 
             } catch (error) {
                 console.error('Checkout session error:', error);
