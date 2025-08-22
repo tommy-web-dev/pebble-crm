@@ -23,7 +23,7 @@ const Upgrade: React.FC = () => {
                     price: 'price_1RyXPmJp0yoFovcOJtEC5hyt', // Your actual Stripe price ID
                     success_url: `${window.location.origin}/dashboard`,
                     cancel_url: `${window.location.origin}/upgrade`,
-                                            trial_period_days: 30, // Explicitly set 30-day trial
+                                            promotion_code: 'promo_1RytRQJp0yoFovcOJtEC5hyt', // Apply 30-day free trial coupon
                     metadata: {
                         userId: currentUser.uid
                     }
