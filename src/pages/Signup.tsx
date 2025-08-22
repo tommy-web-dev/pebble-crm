@@ -73,10 +73,8 @@ const Signup: React.FC = () => {
             setLoading(false);
             setError('Account created! Setting up your free trial... It may take up to 30 seconds for us to create your account. Do not refresh the page.');
 
-            // Add delay to see console messages
-            console.log('Waiting 5 seconds before redirect...');
-            await new Promise(resolve => setTimeout(resolve, 5000));
-            console.log('Now proceeding with redirect...');
+            // Brief delay for Firebase auth to complete
+            await new Promise(resolve => setTimeout(resolve, 1000));
 
             // Create Stripe checkout session using Firebase extension
             try {
@@ -120,14 +118,14 @@ const Signup: React.FC = () => {
                     }
                 });
 
-                // Set a timeout in case the extension doesn't respond
+                // Set a reasonable timeout for checkout session creation
                 setTimeout(() => {
                     unsubscribe();
                     setError('Checkout session creation timed out. Redirecting to upgrade page...');
                     setTimeout(() => {
                         navigate('/upgrade');
                     }, 2000);
-                }, 60000); // 60 second timeout - Firebase extension needs more time
+                }, 30000); // 30 second timeout
 
             } catch (error) {
                 console.error('Checkout session error:', error);

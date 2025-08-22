@@ -188,166 +188,127 @@ export const checkExistingSubscription = async (email: string): Promise<UserSubs
     }
 };
 
+/**
+ * Gets the current user's subscription status by following the correct Firebase Stripe extension flow.
+ * 
+ * FLOW:
+ * 1. Get the signed-in Firebase user's UID
+ * 2. Read from `/customers/{uid}` in Firestore (where Firebase extension stores Stripe data)
+ * 3. Extract the Stripe customer ID (`cus_xxxx`) from the customer document
+ * 4. Use that Stripe customer ID for all Stripe-related operations
+ * 
+ * IMPORTANT: Never assume Firebase UID equals Stripe customer ID - they are mapped via Firestore!
+ */
 export const getSubscriptionStatus = async (userId: string): Promise<UserSubscription | null> => {
     try {
-        const userDoc = await getDoc(doc(db, 'users', userId));
+        // STEP 1: Get the current authenticated Firebase user
+        const { getAuth } = await import('firebase/auth');
+        const auth = getAuth();
+        const currentUser = auth.currentUser;
 
-        if (!userDoc.exists()) {
-            console.warn(`User document not found for userId: ${userId}`);
+        if (!currentUser) {
+            console.warn('No authenticated Firebase user found');
             return null;
         }
 
-        const userData = userDoc.data();
-        console.log(`Checking subscription for user ${userId}:`, userData);
+        console.log(`🔍 Checking subscription for Firebase user: ${currentUser.uid}`);
+        console.log(`📧 User email: ${currentUser.email}`);
 
-        if (userData.subscription && userData.subscription.status) {
-            console.log(`Found subscription in user document:`, userData.subscription);
-            return userData.subscription as UserSubscription;
-        }
-
-        // Check if user has subscription data in the Firebase extension structure
-        if (userData.subscription && userData.subscription.status) {
-            console.log(`Found subscription in user document:`, userData.subscription);
-            return userData.subscription as UserSubscription;
-        }
-
-        // Check if user exists in the Firebase extension customers collection by email
+        // STEP 2: Read the customer document from `/customers/{uid}` in Firestore
+        // This is where the Firebase Stripe extension stores the Stripe customer data
         try {
-            const customersRef = collection(db, 'customers');
-            const customerQuery = query(customersRef, where('email', '==', userData.email));
-            const customerSnapshot = await getDocs(customerQuery);
+            const customerDocRef = doc(db, 'customers', currentUser.uid);
+            const customerDoc = await getDoc(customerDocRef);
 
-            if (!customerSnapshot.empty) {
-                const customerDoc = customerSnapshot.docs[0];
-                const customerData = customerDoc.data();
-                console.log(`Found customer document for email ${userData.email}:`, customerData);
-                
-                // Check the subscriptions sub-collection (Firebase extension structure)
-                const subscriptionsRef = collection(db, 'customers', customerDoc.id, 'subscriptions');
-                const subscriptionsSnapshot = await getDocs(subscriptionsRef);
-                
-                if (!subscriptionsSnapshot.empty) {
-                    console.log(`Found ${subscriptionsSnapshot.docs.length} subscription documents`);
-                    
-                    // Get the first active/trialing subscription
-                    const subscriptionDoc = subscriptionsSnapshot.docs.find(doc => {
-                        const data = doc.data();
-                        console.log(`Checking subscription document:`, data);
-                        return ['active', 'trialing'].includes(data.status);
-                    });
-                    
-                    if (subscriptionDoc) {
-                        const subscription = subscriptionDoc.data();
-                        console.log(`Found active subscription in customers sub-collection:`, subscription);
-                        
-                        // Convert Firebase extension format to your UserSubscription format
-                        const subscriptionData: UserSubscription = {
-                            stripeCustomerId: customerData.stripeId || customerData.stripeCustomerId,
-                            stripeSubscriptionId: subscription.id || subscription.stripeSubscriptionId,
-                            status: subscription.status,
-                            planName: subscription.planName || 'Pebble CRM - Professional Plan',
-                            createdAt: subscription.created_at?.toDate() || subscription.createdAt?.toDate() || new Date(),
-                            updatedAt: subscription.updated_at?.toDate() || subscription.updatedAt?.toDate() || new Date(),
-                            currentPeriodStart: subscription.current_period_start?.toDate() || subscription.currentPeriodStart?.toDate() || new Date(),
-                            currentPeriodEnd: subscription.current_period_end?.toDate() || subscription.currentPeriodEnd?.toDate() || new Date(),
-                            cancelAtPeriodEnd: subscription.cancel_at_period_end || subscription.cancelAtPeriodEnd || false
-                        };
-                        
-                        console.log(`Converted subscription data:`, subscriptionData);
-                        return subscriptionData;
-                    } else {
-                        console.log(`No active/trialing subscriptions found in ${subscriptionsSnapshot.docs.length} subscription documents`);
-                    }
-                } else {
-                    console.log(`No subscription documents found in sub-collection`);
-                }
-            } else {
-                console.log(`No customer document found for email: ${userData.email}`);
+            if (!customerDoc.exists()) {
+                console.log(`❌ No customer document found at /customers/${currentUser.uid}`);
+                console.log(`💡 This means the user hasn't created a Stripe customer yet`);
+                return null;
             }
-        } catch (error) {
-            console.log('Error checking customers collection:', error);
-        }
 
-        // No subscription found in current user document
-        // Try alternative approach: search all customers by email for subscriptions
-        if (userData.email) {
-            console.log(`Trying alternative subscription lookup for email: ${userData.email}`);
+            const customerData = customerDoc.data();
+            console.log(`✅ Found customer document:`, customerData);
+
+            // STEP 3: Extract the Stripe customer ID from the customer document
+            // This is the `cus_xxxx` ID that Stripe uses, NOT the Firebase UID
+            const stripeCustomerId = customerData.stripeId;
             
-            try {
-                // Search all customers collection for this email
-                const allCustomersRef = collection(db, 'customers');
-                const emailQuery = query(allCustomersRef, where('email', '==', userData.email));
-                const emailSnapshot = await getDocs(emailQuery);
-                
-                if (!emailSnapshot.empty) {
-                    console.log(`Found ${emailSnapshot.docs.length} customer documents for email ${userData.email}`);
-                    
-                    for (const customerDoc of emailSnapshot.docs) {
-                        const customerData = customerDoc.data();
-                        console.log(`Checking customer document:`, customerData);
-                        
-                        // Check subscriptions sub-collection
-                        const subscriptionsRef = collection(db, 'customers', customerDoc.id, 'subscriptions');
-                        const subscriptionsSnapshot = await getDocs(subscriptionsRef);
-                        
-                        if (!subscriptionsSnapshot.empty) {
-                            console.log(`Found ${subscriptionsSnapshot.docs.length} subscription documents in customer ${customerDoc.id}`);
-                            
-                            // Look for active/trialing subscription
-                            for (const subDoc of subscriptionsSnapshot.docs) {
-                                const subData = subDoc.data();
-                                console.log(`Subscription data:`, subData);
-                                
-                                if (['active', 'trialing'].includes(subData.status)) {
-                                    console.log(`Found active subscription:`, subData);
-                                    
-                                    // Convert to UserSubscription format
-                                    const subscriptionData: UserSubscription = {
-                                        stripeCustomerId: customerData.stripeId || customerData.stripeCustomerId,
-                                        stripeSubscriptionId: subData.id || subData.stripeSubscriptionId,
-                                        status: subData.status,
-                                        planName: subData.planName || 'Pebble CRM - Professional Plan',
-                                        createdAt: subData.created_at?.toDate() || subData.createdAt?.toDate() || new Date(),
-                                        updatedAt: subData.updated_at?.toDate() || subData.updatedAt?.toDate() || new Date(),
-                                        currentPeriodStart: subData.current_period_start?.toDate() || subData.currentPeriodStart?.toDate() || new Date(),
-                                        currentPeriodEnd: subData.current_period_end?.toDate() || subData.currentPeriodEnd?.toDate() || new Date(),
-                                        cancelAtPeriodEnd: subData.cancel_at_period_end || subData.cancelAtPeriodEnd || false
-                                    };
-                                    
-                                    console.log(`Successfully converted subscription data:`, subscriptionData);
-                                    
-                                    // Link this subscription to the user
-                                    await updateDoc(doc(db, 'users', userId), {
-                                        subscription: subscriptionData,
-                                        updatedAt: new Date()
-                                    });
-                                    
-                                    return subscriptionData;
-                                }
-                            }
-                        }
-                    }
-                }
-            } catch (error) {
-                console.log('Error in alternative subscription lookup:', error);
+            if (!stripeCustomerId) {
+                console.log(`❌ No Stripe customer ID found in customer document`);
+                return null;
             }
+
+            console.log(`💳 Stripe customer ID: ${stripeCustomerId}`);
+            console.log(`🔗 Firebase UID: ${currentUser.uid}`);
+            console.log(`📝 Note: These are different IDs - Firebase UID maps to Stripe customer ID via Firestore`);
+
+            // STEP 4: Check the subscriptions sub-collection for active subscriptions
+            const subscriptionsRef = collection(db, 'customers', currentUser.uid, 'subscriptions');
+            const subscriptionsSnapshot = await getDocs(subscriptionsRef);
+
+            if (subscriptionsSnapshot.empty) {
+                console.log(`❌ No subscription documents found in /customers/${currentUser.uid}/subscriptions`);
+                return null;
+            }
+
+            console.log(`📊 Found ${subscriptionsSnapshot.docs.length} subscription document(s)`);
+
+            // Look for active or trialing subscriptions
+            for (const subDoc of subscriptionsSnapshot.docs) {
+                const subData = subDoc.data();
+                console.log(`📋 Checking subscription:`, subData);
+
+                if (['active', 'trialing'].includes(subData.status)) {
+                    console.log(`✅ Found active subscription with status: ${subData.status}`);
+
+                    // STEP 5: Convert Firebase extension format to your app's UserSubscription format
+                    const subscriptionData: UserSubscription = {
+                        stripeCustomerId: stripeCustomerId, // Use the Stripe customer ID, NOT Firebase UID
+                        stripeSubscriptionId: subData.id || subData.stripeSubscriptionId,
+                        status: subData.status,
+                        planName: subData.planName || 'Pebble CRM - Professional Plan',
+                        createdAt: subData.created_at?.toDate() || subData.createdAt?.toDate() || new Date(),
+                        updatedAt: subData.updated_at?.toDate() || subData.updatedAt?.toDate() || new Date(),
+                        currentPeriodStart: subData.current_period_start?.toDate() || subData.currentPeriodStart?.toDate() || new Date(),
+                        currentPeriodEnd: subData.current_period_end?.toDate() || subData.currentPeriodEnd?.toDate() || new Date(),
+                        cancelAtPeriodEnd: subData.cancel_at_period_end || subData.cancelAtPeriodEnd || false
+                    };
+
+                    console.log(`🎯 Successfully converted to UserSubscription format:`, subscriptionData);
+
+                    // STEP 6: Link this subscription data to the user document for future quick access
+                    try {
+                        await updateDoc(doc(db, 'users', currentUser.uid), {
+                            subscription: subscriptionData,
+                            updatedAt: new Date()
+                        });
+                        console.log(`✅ Linked subscription data to user document`);
+                    } catch (linkError) {
+                        console.warn(`⚠️ Could not link subscription to user document:`, linkError);
+                        // Don't fail the whole operation - subscription data is still valid
+                    }
+
+                    return subscriptionData;
+                }
+            }
+
+            console.log(`❌ No active or trialing subscriptions found`);
+            return null;
+
+        } catch (customerError: any) {
+            console.error(`❌ Error accessing customer collection:`, customerError);
+            
+            // Check if this is a permissions issue
+            if (customerError.code === 'permission-denied') {
+                console.error(`🔒 Permission denied accessing /customers/${currentUser.uid}`);
+                console.error(`💡 Check your Firestore security rules for the customers collection`);
+            }
+            
+            return null;
         }
 
-        // No subscription found - this is normal for new users
-        console.log(`No subscription found for user: ${userId}`);
-
-        // TODO: This is where you would call your backend to check Stripe directly
-        // For now, we'll return null and show a helpful message
-        console.log(`To fix this issue:`);
-        console.log(`1. Check if your Stripe webhook endpoint is working`);
-        console.log(`2. Verify webhook events are being sent to: ${process.env.REACT_APP_WEBHOOK_URL || 'your-webhook-url'}`);
-        console.log(`3. Check Stripe dashboard for subscription status`);
-        console.log(`4. Manually sync subscription data if needed`);
-
-        return null;
     } catch (error) {
-        console.error('Error getting subscription status:', error);
-        // Don't throw error, just return null to prevent crashes
+        console.error('❌ Error in getSubscriptionStatus:', error);
         return null;
     }
 }; 
