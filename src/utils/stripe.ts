@@ -205,84 +205,44 @@ export const getSubscriptionStatus = async (userId: string): Promise<UserSubscri
             return userData.subscription as UserSubscription;
         }
 
-        // NEW: If user has stripeCustomerId but no subscription data, fetch from Stripe
-        if (userData.stripeCustomerId && !userData.subscription) {
-            console.log(`User has stripeCustomerId ${userData.stripeCustomerId} but no subscription data. Fetching from Stripe...`);
+        // Check if user has subscription data in the Firebase extension structure
+        if (userData.subscription && userData.subscription.status) {
+            console.log(`Found subscription in user document:`, userData.subscription);
+            return userData.subscription as UserSubscription;
+        }
 
-            try {
-                // Call your backend to get subscription data from Stripe
-                const response = await fetch(`https://pebble-crm.vercel.app/api/get-subscription?customerId=${userData.stripeCustomerId}`);
+        // Check if user exists in the Firebase extension customers collection
+        try {
+            const customersRef = collection(db, 'customers');
+            const customerQuery = query(customersRef, where('email', '==', userData.email));
+            const customerSnapshot = await getDocs(customerQuery);
 
-                if (response.ok) {
-                    const stripeData = await response.json();
-                    console.log(`Retrieved subscription data from Stripe:`, stripeData);
-
-                    if (stripeData.subscription) {
-                        // Debug: Log the specific timestamp values
-                        console.log(`Subscription timestamps:`, {
-                            current_period_start: stripeData.subscription.current_period_start,
-                            current_period_end: stripeData.subscription.current_period_end,
-                            trial_start: stripeData.subscription.trial_start,
-                            trial_end: stripeData.subscription.trial_end,
-                            status: stripeData.subscription.status
-                        });
-
-                        // Helper function to safely parse Stripe timestamps
-                        const safeParseDate = (timestamp: number | undefined): Date | undefined => {
-                            if (!timestamp || typeof timestamp !== 'number') return undefined;
-                            try {
-                                const date = new Date(timestamp * 1000);
-                                // Check if the date is valid and not in the distant past
-                                if (isNaN(date.getTime()) || date.getFullYear() < 2020) {
-                                    console.warn('Invalid or too old timestamp:', timestamp, 'parsed as:', date);
-                                    return undefined;
-                                }
-                                return date;
-                            } catch (error) {
-                                console.warn('Invalid timestamp:', timestamp, error);
-                                return undefined;
-                            }
-                        };
-
-                        // Create subscription object with safe date parsing
-                        const subscriptionData: UserSubscription = {
-                            stripeCustomerId: userData.stripeCustomerId,
-                            stripeSubscriptionId: stripeData.subscription.id,
-                            status: stripeData.subscription.status,
-                            planName: 'Pebble CRM - Professional Plan',
-                            currentPeriodStart: safeParseDate(stripeData.subscription.current_period_start) || new Date(),
-                            currentPeriodEnd: safeParseDate(stripeData.subscription.current_period_end) || new Date(),
-                            trialStart: safeParseDate(stripeData.subscription.trial_start),
-                            trialEnd: safeParseDate(stripeData.subscription.trial_end),
-                            cancelAtPeriodEnd: stripeData.subscription.cancel_at_period_end || false,
-                            createdAt: new Date(),
-                            updatedAt: new Date()
-                        };
-
-                        console.log(`Created subscription data object:`, subscriptionData);
-
-                        // Filter out undefined values for Firebase compatibility
-                        const cleanSubscriptionData = Object.fromEntries(
-                            Object.entries(subscriptionData).filter(([_, value]) => value !== undefined)
-                        );
-
-                        console.log(`Cleaned subscription data for Firebase:`, cleanSubscriptionData);
-
-                        // Update Firebase with the subscription data
-                        await updateDoc(doc(db, 'users', userId), {
-                            subscription: cleanSubscriptionData,
-                            updatedAt: new Date()
-                        });
-
-                        console.log(`✅ Updated Firebase with subscription data from Stripe`);
-                        return subscriptionData;
-                    }
-                } else {
-                    console.log(`Failed to fetch subscription from Stripe: ${response.status}`);
+            if (!customerSnapshot.empty) {
+                const customerDoc = customerSnapshot.docs[0];
+                const customerData = customerDoc.data();
+                
+                if (customerData.subscriptions && customerData.subscriptions.length > 0) {
+                    const subscription = customerData.subscriptions[0];
+                    console.log(`Found subscription in customers collection:`, subscription);
+                    
+                    // Convert Firebase extension format to your UserSubscription format
+                    const subscriptionData: UserSubscription = {
+                        stripeCustomerId: customerData.stripeCustomerId || userData.stripeCustomerId,
+                        stripeSubscriptionId: subscription.stripeSubscriptionId,
+                        status: subscription.status,
+                        planName: subscription.planName || 'Pebble CRM - Professional Plan',
+                        createdAt: subscription.createdAt?.toDate() || new Date(),
+                        updatedAt: subscription.updatedAt?.toDate() || new Date(),
+                        currentPeriodStart: subscription.currentPeriodStart?.toDate() || new Date(),
+                        currentPeriodEnd: subscription.currentPeriodEnd?.toDate() || new Date(),
+                        cancelAtPeriodEnd: subscription.cancelAtPeriodEnd || false
+                    };
+                    
+                    return subscriptionData;
                 }
-            } catch (error) {
-                console.error('Error fetching subscription from Stripe:', error);
             }
+        } catch (error) {
+            console.log('Error checking customers collection:', error);
         }
 
         // No subscription found in current user document

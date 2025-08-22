@@ -44,12 +44,42 @@ const Landing: React.FC = () => {
             console.log('User has subscription, redirecting to dashboard');
             navigate('/dashboard');
         } else if (currentUser) {
-            // User is logged in but no subscription, redirect to Stripe
-            console.log('User logged in but no subscription, redirecting to Stripe');
+            // User is logged in but no subscription, create checkout session
+            console.log('User logged in but no subscription, creating checkout session');
 
-            // Redirect to Stripe checkout with user metadata
-            const stripeUrl = `https://buy.stripe.com/28E9AUcYu3uC8vjavQfjG01?prefilled_email=${encodeURIComponent(currentUser.email || '')}&client_reference_id=${currentUser.uid}`;
-            window.location.href = stripeUrl;
+            try {
+                // Import Firebase functions dynamically
+                const { getFunctions, httpsCallable } = await import('firebase/functions');
+                const functions = getFunctions();
+                
+                // Call the Firebase extension function to create checkout session
+                const createCheckoutSession = httpsCallable(functions, 'ext-firestore-stripe-payments-createCheckoutSession');
+                
+                const result = await createCheckoutSession({
+                    price: 'price_1RyXPmJp0yoFovcOJtEC5hyt', // Your actual Stripe price ID
+                    success_url: `${window.location.origin}/dashboard`,
+                    cancel_url: `${window.location.origin}/upgrade`,
+                    customer_email: currentUser.email || '',
+                    metadata: {
+                        userId: currentUser.uid
+                    }
+                });
+                
+                console.log('Checkout session created:', result.data);
+                
+                // Redirect to Stripe checkout
+                const data = result.data as { url?: string };
+                if (data.url) {
+                    window.location.href = data.url;
+                } else {
+                    throw new Error('No checkout URL received');
+                }
+                
+            } catch (error) {
+                console.error('Checkout session error:', error);
+                // Fallback to upgrade page if checkout creation fails
+                navigate('/upgrade');
+            }
         } else {
             // User not logged in, go to signup page
             console.log('User not logged in, going to signup page');

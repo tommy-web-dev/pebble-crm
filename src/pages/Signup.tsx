@@ -77,48 +77,44 @@ const Signup: React.FC = () => {
             await new Promise(resolve => setTimeout(resolve, 5000));
             console.log('Now proceeding with redirect...');
 
-            // Add a timeout fallback in case Stripe redirect takes too long
-            const redirectTimeout = setTimeout(() => {
-                console.log('Stripe redirect timeout - redirecting to upgrade page as fallback');
-                setError('Redirecting to upgrade page...');
-                navigate('/upgrade');
-            }, 10000); // 10 second timeout
-
-            // Wait a moment for Firebase auth to complete, then create checkout session
-            setTimeout(async () => {
-                try {
-                    console.log('Account created successfully! Creating Stripe checkout session...');
-
-                    // For now, redirect directly to Stripe checkout
-                    // TODO: Implement proper checkout session creation
-                    console.log('Redirecting to Stripe checkout...');
-
-                    // Redirect to Stripe checkout with user metadata
-                    const stripeUrl = `https://buy.stripe.com/28E9AUcYu3uC8vjavQfjG01?prefilled_email=${encodeURIComponent(formData.email)}&client_reference_id=${userId}`;
-                    window.location.href = stripeUrl;
-
-                    // Clear timeout if redirect succeeds
-                    clearTimeout(redirectTimeout);
-                } catch (error) {
-                    console.error('Checkout session error:', error);
-                    // Clear timeout
-                    clearTimeout(redirectTimeout);
-                    // If checkout creation fails, redirect to upgrade page as fallback
-                    setError('Redirecting to upgrade page...');
-                    setTimeout(() => {
-                        navigate('/upgrade');
-                    }, 1000);
+            // Create Stripe checkout session using Firebase extension
+            try {
+                console.log('Account created successfully! Creating Stripe checkout session...');
+                
+                // Import Firebase functions dynamically
+                const { getFunctions, httpsCallable } = await import('firebase/functions');
+                const functions = getFunctions();
+                
+                // Call the Firebase extension function to create checkout session
+                const createCheckoutSession = httpsCallable(functions, 'ext-firestore-stripe-payments-createCheckoutSession');
+                
+                const result = await createCheckoutSession({
+                    price: 'price_1RyXPmJp0yoFovcOJtEC5hyt', // Your actual Stripe price ID
+                    success_url: `${window.location.origin}/dashboard`,
+                    cancel_url: `${window.location.origin}/upgrade`,
+                    customer_email: formData.email,
+                    metadata: {
+                        userId: userId
+                    }
+                });
+                
+                console.log('Checkout session created:', result.data);
+                
+                // Redirect to Stripe checkout
+                const data = result.data as { url?: string };
+                if (data.url) {
+                    window.location.href = data.url;
+                } else {
+                    throw new Error('No checkout URL received');
                 }
-            }, 2000); // Increased delay to ensure Firebase auth is complete
-
-            // Fallback timeout - if nothing happens within 10 seconds, redirect to upgrade
-            setTimeout(() => {
-                if (!loading) {
-                    console.log('Fallback timeout reached, redirecting to upgrade page');
-                    setError('Taking you to the upgrade page...');
+                
+            } catch (error) {
+                console.error('Checkout session error:', error);
+                setError('Failed to create checkout session. Redirecting to upgrade page...');
+                setTimeout(() => {
                     navigate('/upgrade');
-                }
-            }, 10000);
+                }, 2000);
+            }
 
         } catch (error: any) {
             console.error('Signup error:', error);

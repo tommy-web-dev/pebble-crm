@@ -5,10 +5,39 @@ import { useAuth } from '../contexts/AuthContext';
 const Upgrade: React.FC = () => {
     const { currentUser } = useAuth();
 
-    const handleStartTrial = () => {
-        // Redirect directly to Stripe checkout
-        const stripeUrl = `https://buy.stripe.com/28E9AUcYu3uC8vjavQfjG01?prefilled_email=${encodeURIComponent(currentUser?.email || '')}&client_reference_id=${currentUser?.uid || ''}`;
-        window.location.href = stripeUrl;
+    const handleStartTrial = async () => {
+        try {
+            // Import Firebase functions dynamically
+            const { getFunctions, httpsCallable } = await import('firebase/functions');
+            const functions = getFunctions();
+            
+            // Call the Firebase extension function to create checkout session
+            const createCheckoutSession = httpsCallable(functions, 'ext-firestore-stripe-payments-createCheckoutSession');
+            
+            const result = await createCheckoutSession({
+                price: 'price_1RyXPmJp0yoFovcOJtEC5hyt', // Your actual Stripe price ID
+                success_url: `${window.location.origin}/dashboard`,
+                cancel_url: `${window.location.origin}/upgrade`,
+                customer_email: currentUser?.email || '',
+                metadata: {
+                    userId: currentUser?.uid || ''
+                }
+            });
+            
+            console.log('Checkout session created:', result.data);
+            
+            // Redirect to Stripe checkout
+            const data = result.data as { url?: string };
+            if (data.url) {
+                window.location.href = data.url;
+            } else {
+                throw new Error('No checkout URL received');
+            }
+            
+        } catch (error) {
+            console.error('Checkout session error:', error);
+            alert('Failed to create checkout session. Please try again.');
+        }
     };
 
 

@@ -1,10 +1,5 @@
 {
     "version": 2,
-    "functions": {
-        "api/*.js": {
-            "runtime": "nodejs18.x"
-        }
-    },
     "builds": [
         {
             "src": "package.json",
@@ -15,10 +10,6 @@
         }
     ],
     "rewrites": [
-        {
-            "source": "/api/(.*)",
-            "destination": "/api/$1"
-        },
         {
             "source": "/(.*)",
             "destination": "/index.html"
