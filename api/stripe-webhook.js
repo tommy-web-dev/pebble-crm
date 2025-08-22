@@ -1,7 +1,7 @@
 import Stripe from 'stripe';
 import admin from 'firebase-admin';
 
-// Initialize Firebase Admin if not already initialized
+// Initialize Firebase Admin if not already initialized - force redeploy
 if (!admin.apps.length) {
     admin.initializeApp({
         credential: admin.credential.cert({
