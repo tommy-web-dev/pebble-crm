@@ -23,6 +23,7 @@ const Upgrade: React.FC = () => {
                     price: 'price_1RyXPmJp0yoFovcOJtEC5hyt', // Your actual Stripe price ID
                     success_url: `${window.location.origin}/dashboard`,
                     cancel_url: `${window.location.origin}/upgrade`,
+                    trial_from_plan: true, // Explicitly enable trial from plan
                     metadata: {
                         userId: currentUser.uid
                     }
