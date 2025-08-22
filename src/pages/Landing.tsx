@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { getSubscriptionStatus } from '../utils/stripe';
 import { UserSubscription } from '../types';
-import { app } from '../config/firebase';
+
 
 const Landing: React.FC = () => {
     const { currentUser, logout } = useAuth();
@@ -49,33 +49,51 @@ const Landing: React.FC = () => {
             console.log('User logged in but no subscription, creating checkout session');
 
             try {
-                // Import Firebase functions dynamically
-                const { getFunctions, httpsCallable } = await import('firebase/functions');
-                const functions = getFunctions(app, 'us-central1');
-                
-                // Call the Firebase extension function to create checkout session
-                const createCheckoutSession = httpsCallable(functions, 'ext-firestore-stripe-payments-createCheckoutSession');
-                
-                const result = await createCheckoutSession({
-                    price: 'price_1RyXPmJp0yoFovcOJtEC5hyt', // Your actual Stripe price ID
-                    success_url: `${window.location.origin}/dashboard`,
-                    cancel_url: `${window.location.origin}/upgrade`,
-                    customer_email: currentUser.email || '',
-                    metadata: {
-                        userId: currentUser.uid
+                // Import Firebase Firestore
+                const { collection, addDoc, onSnapshot } = await import('firebase/firestore');
+                const { db } = await import('../config/firebase');
+
+                // Create a checkout session document in Firestore
+                const docRef = await addDoc(
+                    collection(db, 'customers', currentUser.uid, 'checkout_sessions'),
+                    {
+                        price: 'price_1RyXPmJp0yoFovcOJtEC5hyt', // Your actual Stripe price ID
+                        success_url: `${window.location.origin}/dashboard`,
+                        cancel_url: `${window.location.origin}/upgrade`,
+                        metadata: {
+                            userId: currentUser.uid
+                        }
+                    }
+                );
+
+                console.log('Checkout session document created:', docRef.id);
+
+                // Listen for the checkout session to be updated by the extension
+                const unsubscribe = onSnapshot(docRef, (snap) => {
+                    const { error, url } = snap.data() || {};
+                    
+                    if (error) {
+                        console.error('Checkout session error:', error);
+                        // Fallback to upgrade page if checkout creation fails
+                        navigate('/upgrade');
+                        unsubscribe();
+                        return;
+                    }
+                    
+                    if (url) {
+                        console.log('Checkout URL received:', url);
+                        unsubscribe(); // Stop listening
+                        window.location.href = url; // Redirect to Stripe
                     }
                 });
-                
-                console.log('Checkout session created:', result.data);
-                
-                // Redirect to Stripe checkout
-                const data = result.data as { url?: string };
-                if (data.url) {
-                    window.location.href = data.url;
-                } else {
-                    throw new Error('No checkout URL received');
-                }
-                
+
+                // Set a timeout in case the extension doesn't respond
+                setTimeout(() => {
+                    unsubscribe();
+                    // Fallback to upgrade page if checkout creation fails
+                    navigate('/upgrade');
+                }, 30000); // 30 second timeout
+
             } catch (error) {
                 console.error('Checkout session error:', error);
                 // Fallback to upgrade page if checkout creation fails
