@@ -85,11 +85,17 @@ async function handleCheckoutSessionCompleted(session) {
 
             await userRef.update({
                 stripeCustomerId: customer.id,
-                stripeSubscriptionId: subscription.id,
-                subscriptionStatus: subscription.status,
-                subscriptionPlan: 'professional',
-                trialEnd: subscription.trial_end ? new Date(subscription.trial_end * 1000) : null,
-                currentPeriodEnd: subscription.current_period_end ? new Date(subscription.current_period_end * 1000) : null,
+                subscription: {
+                    status: subscription.status,
+                    stripeSubscriptionId: subscription.id,
+                    stripeCustomerId: customer.id,
+                    planName: 'Pebble CRM - Professional Plan',
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                    currentPeriodStart: subscription.current_period_start ? new Date(subscription.current_period_start * 1000) : new Date(),
+                    currentPeriodEnd: subscription.current_period_end ? new Date(subscription.current_period_end * 1000) : new Date(),
+                    cancelAtPeriodEnd: subscription.cancel_at_period_end || false
+                },
                 updatedAt: new Date()
             });
 
@@ -111,11 +117,17 @@ async function handleSubscriptionCreated(subscription) {
 
             await userRef.update({
                 stripeCustomerId: customer.id,
-                stripeSubscriptionId: subscription.id,
-                subscriptionStatus: subscription.status,
-                subscriptionPlan: 'professional',
-                trialEnd: subscription.trial_end ? new Date(subscription.trial_end * 1000) : null,
-                currentPeriodEnd: subscription.current_period_end ? new Date(subscription.current_period_end * 1000) : null,
+                subscription: {
+                    status: subscription.status,
+                    stripeSubscriptionId: subscription.id,
+                    stripeCustomerId: customer.id,
+                    planName: 'Pebble CRM - Professional Plan',
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                    currentPeriodStart: subscription.current_period_start ? new Date(subscription.current_period_start * 1000) : new Date(),
+                    currentPeriodEnd: subscription.current_period_end ? new Date(subscription.current_period_end * 1000) : new Date(),
+                    cancelAtPeriodEnd: subscription.cancel_at_period_end || false
+                },
                 updatedAt: new Date()
             });
         }
@@ -134,9 +146,10 @@ async function handleSubscriptionUpdated(subscription) {
             const userRef = db.collection('users').doc(customer.metadata.userId);
 
             await userRef.update({
-                subscriptionStatus: subscription.status,
-                trialEnd: subscription.trial_end ? new Date(subscription.trial_end * 1000) : null,
-                currentPeriodEnd: subscription.current_period_end ? new Date(subscription.current_period_end * 1000) : null,
+                'subscription.status': subscription.status,
+                'subscription.trialEnd': subscription.trial_end ? new Date(subscription.trial_end * 1000) : null,
+                'subscription.currentPeriodEnd': subscription.current_period_end ? new Date(subscription.current_period_end * 1000) : null,
+                'subscription.updatedAt': new Date(),
                 updatedAt: new Date()
             });
         }
@@ -155,7 +168,8 @@ async function handleSubscriptionDeleted(subscription) {
             const userRef = db.collection('users').doc(customer.metadata.userId);
 
             await userRef.update({
-                subscriptionStatus: 'canceled',
+                'subscription.status': 'canceled',
+                'subscription.updatedAt': new Date(),
                 updatedAt: new Date()
             });
         }
@@ -174,7 +188,8 @@ async function handleInvoicePaymentSucceeded(invoice) {
             const userRef = db.collection('users').doc(customer.metadata.userId);
 
             await userRef.update({
-                subscriptionStatus: 'active',
+                'subscription.status': 'active',
+                'subscription.updatedAt': new Date(),
                 updatedAt: new Date()
             });
         }
@@ -193,7 +208,8 @@ async function handleInvoicePaymentFailed(invoice) {
             const userRef = db.collection('users').doc(customer.metadata.userId);
 
             await userRef.update({
-                subscriptionStatus: 'past_due',
+                'subscription.status': 'past_due',
+                'subscription.updatedAt': new Date(),
                 updatedAt: new Date()
             });
         }
