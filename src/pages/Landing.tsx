@@ -60,7 +60,7 @@ const Landing: React.FC = () => {
                         price: 'price_1RyXPmJp0yoFovcOJtEC5hyt', // Your actual Stripe price ID
                         success_url: `${window.location.origin}/dashboard`,
                         cancel_url: `${window.location.origin}/upgrade`,
-                        trial_from_plan: true, // Explicitly enable trial from plan
+                        trial_period_days: 30, // Explicitly set 30-day trial
                         metadata: {
                             userId: currentUser.uid
                         }
@@ -72,7 +72,7 @@ const Landing: React.FC = () => {
                 // Listen for the checkout session to be updated by the extension
                 const unsubscribe = onSnapshot(docRef, (snap) => {
                     const { error, url } = snap.data() || {};
-                    
+
                     if (error) {
                         console.error('Checkout session error:', error);
                         // Fallback to upgrade page if checkout creation fails
@@ -80,7 +80,7 @@ const Landing: React.FC = () => {
                         unsubscribe();
                         return;
                     }
-                    
+
                     if (url) {
                         console.log('Checkout URL received:', url);
                         unsubscribe(); // Stop listening
