@@ -60,7 +60,7 @@ const Landing: React.FC = () => {
                         price: 'price_1RyXPmJp0yoFovcOJtEC5hyt', // Your actual Stripe price ID
                         success_url: `${window.location.origin}/dashboard`,
                         cancel_url: `${window.location.origin}/upgrade`,
-                        promotion_code: 'promo_1RytRQJp0yoFovcO9U49F75z', // Apply 30-day free trial coupon
+                        promotion_code: 'promo_1Ryuk7Jp0yoFovcOukL5gcFP', // Apply 30-day free trial coupon
                         metadata: {
                             userId: currentUser.uid
                         }
