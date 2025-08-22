@@ -93,7 +93,7 @@ const Signup: React.FC = () => {
                         price: 'price_1RyXPmJp0yoFovcOJtEC5hyt', // Your actual Stripe price ID
                         success_url: `${window.location.origin}/dashboard`,
                         cancel_url: `${window.location.origin}/upgrade`,
-                        promotion_code: 'promo_1RytRQJp0yoFovcO9U49F75z', // Apply 30-day free trial coupon - force redeploy
+                        promotion_code: 'promo_1RytRQJp0yoFovcO9U49F75z', // Apply 30-day free trial coupon - clean redeploy
                         metadata: {
                             userId: userId
                         }
