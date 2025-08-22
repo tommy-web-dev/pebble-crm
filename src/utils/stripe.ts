@@ -211,7 +211,7 @@ export const getSubscriptionStatus = async (userId: string): Promise<UserSubscri
             return userData.subscription as UserSubscription;
         }
 
-        // Check if user exists in the Firebase extension customers collection
+        // Check if user exists in the Firebase extension customers collection by email
         try {
             const customersRef = collection(db, 'customers');
             const customerQuery = query(customersRef, where('email', '==', userData.email));
@@ -220,21 +220,25 @@ export const getSubscriptionStatus = async (userId: string): Promise<UserSubscri
             if (!customerSnapshot.empty) {
                 const customerDoc = customerSnapshot.docs[0];
                 const customerData = customerDoc.data();
+                console.log(`Found customer document for email ${userData.email}:`, customerData);
                 
                 // Check the subscriptions sub-collection (Firebase extension structure)
                 const subscriptionsRef = collection(db, 'customers', customerDoc.id, 'subscriptions');
                 const subscriptionsSnapshot = await getDocs(subscriptionsRef);
                 
                 if (!subscriptionsSnapshot.empty) {
+                    console.log(`Found ${subscriptionsSnapshot.docs.length} subscription documents`);
+                    
                     // Get the first active/trialing subscription
                     const subscriptionDoc = subscriptionsSnapshot.docs.find(doc => {
                         const data = doc.data();
+                        console.log(`Checking subscription document:`, data);
                         return ['active', 'trialing'].includes(data.status);
                     });
                     
                     if (subscriptionDoc) {
                         const subscription = subscriptionDoc.data();
-                        console.log(`Found subscription in customers sub-collection:`, subscription);
+                        console.log(`Found active subscription in customers sub-collection:`, subscription);
                         
                         // Convert Firebase extension format to your UserSubscription format
                         const subscriptionData: UserSubscription = {
@@ -249,30 +253,83 @@ export const getSubscriptionStatus = async (userId: string): Promise<UserSubscri
                             cancelAtPeriodEnd: subscription.cancel_at_period_end || subscription.cancelAtPeriodEnd || false
                         };
                         
+                        console.log(`Converted subscription data:`, subscriptionData);
                         return subscriptionData;
+                    } else {
+                        console.log(`No active/trialing subscriptions found in ${subscriptionsSnapshot.docs.length} subscription documents`);
                     }
+                } else {
+                    console.log(`No subscription documents found in sub-collection`);
                 }
+            } else {
+                console.log(`No customer document found for email: ${userData.email}`);
             }
         } catch (error) {
             console.log('Error checking customers collection:', error);
         }
 
         // No subscription found in current user document
-        // Check if there's another user document with the same email that has a subscription
+        // Try alternative approach: search all customers by email for subscriptions
         if (userData.email) {
-            console.log(`No subscription found for user ${userId}, checking for existing subscription with email: ${userData.email}`);
-            const existingSubscription = await checkExistingSubscription(userData.email);
-
-            if (existingSubscription) {
-                console.log(`Found existing subscription for email ${userData.email}, linking to user ${userId}`);
-
-                // Link the existing subscription to this user
-                await updateDoc(doc(db, 'users', userId), {
-                    subscription: existingSubscription,
-                    updatedAt: new Date()
-                });
-
-                return existingSubscription;
+            console.log(`Trying alternative subscription lookup for email: ${userData.email}`);
+            
+            try {
+                // Search all customers collection for this email
+                const allCustomersRef = collection(db, 'customers');
+                const emailQuery = query(allCustomersRef, where('email', '==', userData.email));
+                const emailSnapshot = await getDocs(emailQuery);
+                
+                if (!emailSnapshot.empty) {
+                    console.log(`Found ${emailSnapshot.docs.length} customer documents for email ${userData.email}`);
+                    
+                    for (const customerDoc of emailSnapshot.docs) {
+                        const customerData = customerDoc.data();
+                        console.log(`Checking customer document:`, customerData);
+                        
+                        // Check subscriptions sub-collection
+                        const subscriptionsRef = collection(db, 'customers', customerDoc.id, 'subscriptions');
+                        const subscriptionsSnapshot = await getDocs(subscriptionsRef);
+                        
+                        if (!subscriptionsSnapshot.empty) {
+                            console.log(`Found ${subscriptionsSnapshot.docs.length} subscription documents in customer ${customerDoc.id}`);
+                            
+                            // Look for active/trialing subscription
+                            for (const subDoc of subscriptionsSnapshot.docs) {
+                                const subData = subDoc.data();
+                                console.log(`Subscription data:`, subData);
+                                
+                                if (['active', 'trialing'].includes(subData.status)) {
+                                    console.log(`Found active subscription:`, subData);
+                                    
+                                    // Convert to UserSubscription format
+                                    const subscriptionData: UserSubscription = {
+                                        stripeCustomerId: customerData.stripeId || customerData.stripeCustomerId,
+                                        stripeSubscriptionId: subData.id || subData.stripeSubscriptionId,
+                                        status: subData.status,
+                                        planName: subData.planName || 'Pebble CRM - Professional Plan',
+                                        createdAt: subData.created_at?.toDate() || subData.createdAt?.toDate() || new Date(),
+                                        updatedAt: subData.updated_at?.toDate() || subData.updatedAt?.toDate() || new Date(),
+                                        currentPeriodStart: subData.current_period_start?.toDate() || subData.currentPeriodStart?.toDate() || new Date(),
+                                        currentPeriodEnd: subData.current_period_end?.toDate() || subData.currentPeriodEnd?.toDate() || new Date(),
+                                        cancelAtPeriodEnd: subData.cancel_at_period_end || subData.cancelAtPeriodEnd || false
+                                    };
+                                    
+                                    console.log(`Successfully converted subscription data:`, subscriptionData);
+                                    
+                                    // Link this subscription to the user
+                                    await updateDoc(doc(db, 'users', userId), {
+                                        subscription: subscriptionData,
+                                        updatedAt: new Date()
+                                    });
+                                    
+                                    return subscriptionData;
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (error) {
+                console.log('Error in alternative subscription lookup:', error);
             }
         }
 
