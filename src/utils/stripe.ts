@@ -257,21 +257,26 @@ export const getSubscriptionStatus = async (userId: string): Promise<UserSubscri
             for (const subDoc of subscriptionsSnapshot.docs) {
                 const subData = subDoc.data();
                 console.log(`📋 Checking subscription:`, subData);
+                console.log(`🔍 Available fields:`, Object.keys(subData));
+                console.log(`🆔 Subscription ID field:`, subData.id);
+                console.log(`📝 Stripe subscription ID field:`, subData.stripeSubscriptionId);
 
                 if (['active', 'trialing'].includes(subData.status)) {
                     console.log(`✅ Found active subscription with status: ${subData.status}`);
 
                     // STEP 5: Convert Firebase extension format to your app's UserSubscription format
+                    // IMPORTANT: Guard against undefined values - Firestore doesn't allow them
+                    // Based on Firebase extension structure, use the correct field names
                     const subscriptionData: UserSubscription = {
                         stripeCustomerId: stripeCustomerId, // Use the Stripe customer ID, NOT Firebase UID
-                        stripeSubscriptionId: subData.id || subData.stripeSubscriptionId,
-                        status: subData.status,
-                        planName: subData.planName || 'Pebble CRM - Professional Plan',
-                        createdAt: subData.created_at?.toDate() || subData.createdAt?.toDate() || new Date(),
-                        updatedAt: subData.updated_at?.toDate() || subData.updatedAt?.toDate() || new Date(),
-                        currentPeriodStart: subData.current_period_start?.toDate() || subData.currentPeriodStart?.toDate() || new Date(),
-                        currentPeriodEnd: subData.current_period_end?.toDate() || subData.currentPeriodEnd?.toDate() || new Date(),
-                        cancelAtPeriodEnd: subData.cancel_at_period_end || subData.cancelAtPeriodEnd || false
+                        stripeSubscriptionId: subData.id || null, // Firebase extension uses 'id' field
+                        status: subData.status || 'unknown',
+                        planName: 'Pebble CRM - Professional Plan', // Default plan name
+                        createdAt: subData.created ? new Date(subData.created * 1000) : new Date(), // Stripe timestamp
+                        updatedAt: new Date(), // Current time
+                        currentPeriodStart: subData.current_period_start ? new Date(subData.current_period_start * 1000) : new Date(),
+                        currentPeriodEnd: subData.current_period_end ? new Date(subData.current_period_end * 1000) : new Date(),
+                        cancelAtPeriodEnd: subData.cancel_at_period_end || false
                     };
 
                     console.log(`🎯 Successfully converted to UserSubscription format:`, subscriptionData);
