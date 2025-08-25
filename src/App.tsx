@@ -19,6 +19,7 @@ import Settings from './pages/Settings';
 import Layout from './components/Layout';
 import PrivateRoute from './components/PrivateRoute';
 import SubscriptionGuard from './components/SubscriptionGuard';
+import CookieConsent from './components/CookieConsent';
 
 function App() {
     return (
@@ -56,6 +57,9 @@ function App() {
                                 <Route index element={<Settings />} />
                             </Route>
                         </Routes>
+
+                        {/* Cookie Consent Banner - appears on all pages */}
+                        <CookieConsent />
                     </SettingsProvider>
                 </AppProvider>
             </AuthProvider>
