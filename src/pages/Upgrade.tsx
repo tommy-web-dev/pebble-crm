@@ -6,6 +6,62 @@ import { useAuth } from '../contexts/AuthContext';
 const Upgrade: React.FC = () => {
     const { currentUser } = useAuth();
 
+    // Function to create pro plan checkout without coupon
+    const createProPlanCheckout = async (userId: string) => {
+        try {
+            console.log('Creating pro plan checkout without coupon...');
+            
+            // Import Firebase Firestore
+            const { collection, addDoc, onSnapshot } = await import('firebase/firestore');
+            const { db } = await import('../config/firebase');
+
+            // Create a checkout session document for pro plan (no coupon)
+            const docRef = await addDoc(
+                collection(db, 'customers', userId, 'checkout_sessions'),
+                {
+                    price: 'price_1RzygiJp0yoFovcOeZRs0ete', // £9/month, no trial
+                    success_url: `${window.location.origin}/dashboard`,
+                    cancel_url: `${window.location.origin}/upgrade`,
+                    // NO promotion_code - straight to paid plan
+                    metadata: {
+                        userId: userId,
+                        planType: 'pro_no_trial'
+                    }
+                }
+            );
+
+            console.log('Pro plan checkout session document created:', docRef.id);
+
+            // Listen for the checkout session to be updated
+            const unsubscribe = onSnapshot(docRef, (snap) => {
+                const { error, url } = snap.data() || {};
+
+                if (error) {
+                    console.error('Pro plan checkout session error:', error);
+                    alert(`Pro plan checkout error: ${error.message}`);
+                    unsubscribe();
+                    return;
+                }
+
+                if (url) {
+                    console.log('Pro plan checkout URL received:', url);
+                    unsubscribe(); // Stop listening
+                    window.location.href = url; // Redirect to Stripe
+                }
+            });
+
+            // Set timeout for pro plan checkout
+            setTimeout(() => {
+                unsubscribe();
+                alert('Pro plan checkout creation timed out. Please try again.');
+            }, 60000); // 60 second timeout
+
+        } catch (error) {
+            console.error('Pro plan checkout error:', error);
+            alert('Failed to create pro plan checkout. Please contact support.');
+        }
+    };
+
     const handleStartTrial = async () => {
                 try {
             // Import Firebase Firestore
@@ -38,7 +94,23 @@ const Upgrade: React.FC = () => {
                 
                 if (error) {
                     console.error('Checkout session error:', error);
-                    alert(`An error occurred: ${error.message}`);
+                    
+                    // Check if this is a coupon conflict error
+                    if (error.message && (
+                        error.message.includes('No such promotion code') ||
+                        error.message.includes('Coupon already used') ||
+                        error.message.includes('promotion code') ||
+                        error.message.includes('promo_')
+                    )) {
+                        console.log('Coupon conflict detected, redirecting to pro plan...');
+                        
+                        // Create pro plan checkout without coupon
+                        createProPlanCheckout(currentUser.uid);
+                    } else {
+                        // Handle other errors normally
+                        alert(`An error occurred: ${error.message}`);
+                    }
+                    
                     unsubscribe();
                     return;
                 }
@@ -112,7 +184,7 @@ const Upgrade: React.FC = () => {
                             £9<span className="text-lg text-slate-500">/month</span>
                         </div>
                         <p className="text-slate-600">
-                            Start with a <strong>30-day free trial</strong>
+                            <strong>New users:</strong> 30-day free trial • <strong>Returning users:</strong> Start immediately
                         </p>
                     </div>
 
@@ -149,8 +221,16 @@ const Upgrade: React.FC = () => {
                         onClick={handleStartTrial}
                         className="w-full bg-gradient-to-r from-slate-600 to-blue-600 text-white text-lg font-semibold py-4 px-8 rounded-xl hover:from-slate-700 hover:to-blue-700 focus:ring-4 focus:ring-blue-500/20 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
                     >
-                        {currentUser ? 'Continue to Payment' : 'Start Free Trial'}
+                        {currentUser ? 'Continue to Payment' : 'Get Started'}
                     </button>
+                    
+                    {/* Helpful note about automatic redirect */}
+                    <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                        <p className="text-sm text-blue-700">
+                            💡 <strong>Smart Pricing:</strong> If you've had a free trial before, 
+                            we'll automatically redirect you to our £9/month plan for immediate access.
+                        </p>
+                    </div>
                 </div>
 
                 {/* Footer */}

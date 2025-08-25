@@ -17,6 +17,62 @@ const Signup: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
+    // Function to create pro plan checkout without coupon
+    const createProPlanCheckout = async (userId: string) => {
+        try {
+            console.log('Creating pro plan checkout without coupon...');
+            
+            // Import Firebase Firestore
+            const { collection, addDoc, onSnapshot } = await import('firebase/firestore');
+            const { db } = await import('../config/firebase');
+
+            // Create a checkout session document for pro plan (no coupon)
+            const docRef = await addDoc(
+                collection(db, 'customers', userId, 'checkout_sessions'),
+                {
+                    price: 'price_1RzygiJp0yoFovcOeZRs0ete', // £9/month, no trial
+                    success_url: `${window.location.origin}/dashboard`,
+                    cancel_url: `${window.location.origin}/upgrade`,
+                    // NO promotion_code - straight to paid plan
+                    metadata: {
+                        userId: userId,
+                        planType: 'pro_no_trial'
+                    }
+                }
+            );
+
+            console.log('Pro plan checkout session document created:', docRef.id);
+
+            // Listen for the checkout session to be updated
+            const unsubscribe = onSnapshot(docRef, (snap) => {
+                const { error, url } = snap.data() || {};
+
+                if (error) {
+                    console.error('Pro plan checkout session error:', error);
+                    setError(`Pro plan checkout error: ${error.message}`);
+                    unsubscribe();
+                    return;
+                }
+
+                if (url) {
+                    console.log('Pro plan checkout URL received:', url);
+                    unsubscribe(); // Stop listening
+                    window.location.href = url; // Redirect to Stripe
+                }
+            });
+
+            // Set timeout for pro plan checkout
+            setTimeout(() => {
+                unsubscribe();
+                setError('Pro plan checkout creation timed out. Please try again.');
+            }, 30000); // 30 second timeout
+
+        } catch (error) {
+            console.error('Pro plan checkout error:', error);
+            setError('Failed to create pro plan checkout. Please contact support.');
+        }
+    };
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData({
             ...formData,
@@ -106,7 +162,23 @@ const Signup: React.FC = () => {
 
                     if (error) {
                         console.error('Checkout session error:', error);
-                        setError(`An error occurred: ${error.message}`);
+                        
+                        // Check if this is a coupon conflict error
+                        if (error.message && (
+                            error.message.includes('No such promotion code') ||
+                            error.message.includes('Coupon already used') ||
+                            error.message.includes('promotion code') ||
+                            error.message.includes('promo_')
+                        )) {
+                            console.log('Coupon conflict detected, redirecting to pro plan...');
+                            
+                            // Create pro plan checkout without coupon
+                            createProPlanCheckout(userId);
+                        } else {
+                            // Handle other errors normally
+                            setError(`An error occurred: ${error.message}`);
+                        }
+                        
                         unsubscribe();
                         return;
                     }
